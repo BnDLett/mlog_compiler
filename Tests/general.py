@@ -1,5 +1,4 @@
 from io import TextIOWrapper
-
 import mlog_compiler
 
 sample = """int variable = 3;
