@@ -1,0 +1,2 @@
+class MissingEOL(Exception):
+    pass
