@@ -6,6 +6,7 @@ The custom language currently supports the following:
 - print statements
 - variable assignment
 - comments
+- enabling/disabling blocks
 
 With much more planned to come.
 
@@ -17,9 +18,11 @@ int variable = 3;
 str example_str = "Hello, world!";
 str another_str = "Hello, Discord!";
 float balloon = 3.14159;
+bool enabled = 0;
 
-// Printing a variable
+// Primary code
 print(example_str, 1);
+set_enabled(conveyor1, enabled);
 ```
 This compiles down to:
 ```mlog
@@ -27,8 +30,10 @@ set variable 3
 set example_str "Hello, world!"
 set another_str "Hello, Discord!"
 set balloon 3.14159
+set enabled 0
 print example_str
 printflush message1
+control enabled conveyor1 enabled 0 0 0
 ```
 
 # I need your help.
