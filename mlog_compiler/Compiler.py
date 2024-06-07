@@ -1,6 +1,6 @@
-from mlog_compiler import Assignment
+from mlog_compiler import Assignment, Control
 from mlog_compiler.Blocks import MessageBlock
-from mlog_compiler.Exceptions import MissingEOL
+from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist
 
 
 def validate_line(line: str) -> bool:
@@ -38,7 +38,10 @@ def parse(source_code: str) -> list[str]:
     offset = 1
 
     for index, line in enumerate(source_code_split):
-        if validate_line(line):
+        if line.startswith("//"):
+            offset -= 1
+            continue
+        elif validate_line(line):
             print(f"[{str(index).rjust(3, "0")}] {line}")
             raise MissingEOL()
 
@@ -50,7 +53,9 @@ def parse(source_code: str) -> list[str]:
         arguments = []
 
         for char_index, char in enumerate(line):
-            if validate_call(['int', 'float'], current_word, in_quotes, in_parentheses):
+            validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
+
+            if validate(['int', 'float', 'bool']):
                 var_name = line_split[index + offset]
                 var_data = line_split[index + (offset + 2)]
                 var = Assignment(var_data.removesuffix(";"), var_name)
@@ -58,11 +63,14 @@ def parse(source_code: str) -> list[str]:
                 parsed.append(var.representation)
                 break
 
-            elif validate_call('str', current_word, in_quotes, in_parentheses):
+            elif validate('str'):
                 call_type = 'str'
 
-            elif validate_call('print', current_word, in_quotes, in_parentheses):
+            elif validate('print'):
                 call_type = "print"
+
+            elif validate('set_enabled'):
+                call_type = "set_enabled"
 
             last_char = line[char_index - 1]
 
@@ -80,6 +88,16 @@ def parse(source_code: str) -> list[str]:
                     call = MessageBlock(int(sink), data)
 
                     parsed.append(call.get_processor_representation())
+
+                elif call_type == "set_enabled":
+                    block = arguments[0]
+                    enabled = arguments[1]
+                    call = Control(block, enabled)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "":
+                    raise CallDoesNotExist
 
                 break
             elif char == " " and not in_quotes:

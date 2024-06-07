@@ -1,13 +1,16 @@
 from io import TextIOWrapper
 import mlog_compiler
 
-sample = """ // Variable assignment
+sample = """
+// Variable assignment
 int variable = 3;
 str example_str = "Hello, world!";
 str another_str = "Hello, Discord!";
 float balloon = 3.14159;
-// Printing a variable
+bool enabled = 0;
+// Primary code
 print(example_str, 1);
+set_enabled(conveyor1, enabled);
 """
 
 

@@ -9,11 +9,12 @@ class Assignment:
         self.representation = f"set {name} {data}"
 
 
-class Output:
-    data: any
+class Control:
     representation: str
-    sink: str
+    block: str
+    enabled: str
 
-    def __init__(self, data, sink):
-        self.data = data
-        self.representation = f"print"
+    def __init__(self, block: str, enabled: str):
+        self.block = block
+        self.enabled = enabled
+        self.representation = f"control enabled {self.block} {self.enabled} 0 0 0"
