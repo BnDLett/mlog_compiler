@@ -9,6 +9,13 @@ def validate_line(line: str) -> bool:
     return not line.endswith(";") and not line.endswith("{") and not line.endswith("}") and not can_ignore
 
 
+def validate_call(call: str | list, current_word: str, in_quotes: bool, in_parentheses: bool) -> bool:
+    if type(call) is list:
+        return current_word in call and not in_quotes and not in_parentheses
+
+    return current_word == call and not in_quotes and not in_parentheses
+
+
 def parse(source_code: str) -> list[str]:
     parsed = []
     source_code_split = source_code.split("\n")
@@ -43,7 +50,7 @@ def parse(source_code: str) -> list[str]:
         arguments = []
 
         for char_index, char in enumerate(line):
-            if current_word in ['int', 'float']:
+            if validate_call(['int', 'float'], current_word, in_quotes, in_parentheses):
                 var_name = line_split[index + offset]
                 var_data = line_split[index + (offset + 2)]
                 var = Assignment(var_data.removesuffix(";"), var_name)
@@ -51,10 +58,10 @@ def parse(source_code: str) -> list[str]:
                 parsed.append(var.representation)
                 break
 
-            elif current_word == 'str' and not in_quotes:
+            elif validate_call('str', current_word, in_quotes, in_parentheses):
                 call_type = 'str'
 
-            elif current_word == "print":
+            elif validate_call('print', current_word, in_quotes, in_parentheses):
                 call_type = "print"
 
             last_char = line[char_index - 1]
