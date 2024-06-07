@@ -1,10 +1,13 @@
 from io import TextIOWrapper
 import mlog_compiler
 
-sample = """int variable = 3;
+sample = """ // Variable assignment
+int variable = 3;
 str example_str = "Hello, world!";
 str another_str = "Hello, Discord!";
 float balloon = 3.14159;
+// Printing a variable
+print(example_str, 1);
 """
 
 
