@@ -68,7 +68,6 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(var.representation)
 
                 elif call_type == "print":
-                    print(arguments)
                     data = arguments[0]
                     sink = arguments[1]
                     call = MessageBlock(int(sink), data)

@@ -23,7 +23,6 @@ print(example_str, 1);
 ```
 This compiles down to:
 ```mlog
-['example_str', '1']
 set variable 3
 set example_str "Hello, world!"
 set another_str "Hello, Discord!"
