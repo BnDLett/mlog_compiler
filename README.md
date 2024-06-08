@@ -7,6 +7,9 @@ The custom language currently supports the following:
 - variable assignment
 - comments
 - enabling/disabling blocks
+- if statements
+- sensing data from blocks
+- wait statements
 
 With much more planned to come.
 
@@ -14,26 +17,32 @@ With much more planned to come.
 Here is an example of it in use:
 ```cpp
 // Variable assignment
-int variable = 3;
 str example_str = "Hello, world!";
-str another_str = "Hello, Discord!";
-float balloon = 3.14159;
-bool enabled = 0;
+sense(enabled, switch1, enabled);
+num not_enabled = not enabled;
 
 // Primary code
-print(example_str, 1);
 set_enabled(conveyor1, enabled);
+if (enabled) {
+    print("The button is enabled.", 1);
+}
+if (not_enabled) {
+    print("The button is disabled.", 1);
+}
 ```
 This compiles down to:
 ```mlog
-set variable 3
 set example_str "Hello, world!"
-set another_str "Hello, Discord!"
-set balloon 3.14159
-set enabled 0
-print example_str
-printflush message1
+sensor enabled switch1 @enabled
+op notEqual not_enabled enabled 1
 control enabled conveyor1 enabled 0 0 0
+jump 7 notEqual enabled 1
+print "The button is enabled."
+printflush message1
+jump 10 notEqual not_enabled 1
+print "The button is disabled."
+printflush message1
+end
 ```
 
 # I need your help.

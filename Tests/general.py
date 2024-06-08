@@ -3,14 +3,26 @@ import mlog_compiler
 
 sample = """
 // Variable assignment
-int variable = 3;
 str example_str = "Hello, world!";
-str another_str = "Hello, Discord!";
-float balloon = 3.14159;
-bool enabled = 0;
+sense(enabled, switch1, enabled);
+num not_enabled = not enabled;
+
 // Primary code
-print(example_str, 1);
 set_enabled(conveyor1, enabled);
+if (enabled) {
+    print("The button is enabled.", 1);
+}
+if (not_enabled) {
+    print("The button is disabled.", 1);
+}
+
+// Wait testing. (Don't forget your semi-colons, kids)
+// sense(button_enabled, switch2, enabled);
+// num button_not_enabled = not button_enabled;
+
+// set_enabled(switch2, button_not_enabled);
+// Update: I forgot my semicolon on the wait. 😭
+// wait(0.5);
 """
 
 
