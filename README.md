@@ -3,14 +3,16 @@ A Python program that compiles a custom language into mlog.
 
 # What is currently supported?
 The custom language currently supports the following:
-- print statements
-- variable assignment
-- comments
-- enabling/disabling blocks
-- if statements
-- sensing data from blocks
-- wait statements
-- basic comparative operations
+- Print statements
+- Variable assignment
+- Comments
+- Enabling/disabling blocks
+- If statements
+- Sensing data from blocks
+- Wait statements
+- Logical comparative operations
+- Mathematical operations
+- Bitwise comparative operations
 
 With much more planned to come.
 
