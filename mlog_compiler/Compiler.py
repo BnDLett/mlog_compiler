@@ -63,19 +63,7 @@ def parse(source_code: str) -> list[str]:
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
 
-            if validate('num'):
-                var_name = line_split[index + offset]
-                if "not" in line_split:
-                    var_data = line_split[index + (offset + 3)]
-                    parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
-                    break
-                var_data = line_split[index + (offset + 2)]
-                var = Assignment(var_data.removesuffix(";"), var_name)
-
-                parsed.append(var.representation)
-                break
-
-            elif validate('str'):
+            if validate('var'):
                 call_type = 'str'
 
             elif validate('print'):
@@ -96,8 +84,15 @@ def parse(source_code: str) -> list[str]:
             last_char = line[char_index - 1]
 
             if char == ";":
-                if call_type == 'str':
+                if call_type == 'var':
                     var_name = line_split[index + offset]
+
+                    if "not" in line_split:
+                        # var_data = line_split[index + (offset + 3)]
+                        var_data = current_word
+                        parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
+                        break
+
                     var_data = current_word
                     var = Assignment(var_data.removesuffix(";"), var_name)
 
