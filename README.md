@@ -48,7 +48,7 @@ end
 # I need your help.
 ## The situation
 As of now, the language is still under heavy development. We're missing a lot of features.
-## How can I help?
+## How can you help.
 Recommending changes to the syntax would be greatly appreciated. Alongside that, suggestions for what the language
 should be called would also be appreciated.
 
