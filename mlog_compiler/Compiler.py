@@ -5,15 +5,31 @@ from mlog_compiler.Blocks import MessageBlock
 from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
 
 operations = {
+    # Comparative
     '==': 'equalTo',
     '>': 'greaterThan',
     '>=': 'greaterThanEq',
     '<': 'lessThan',
     '<=': 'lessThanEq',
     'and': 'land',
-    'or': 'or',
     '!=': 'notEqual',
     '===': 'strictEqual',
+
+    # Mathematical
+    '+': 'add',
+    '-': 'sub',
+    '*': 'mul',
+    '/': 'div',
+    '//': 'idiv',
+    '%': 'mod',
+    '**': 'pow',
+
+    # Bitwise
+    'or': 'or',
+    '<<': 'shl',
+    '>>': 'shr',
+    '&': 'and',
+    '^': 'xor',
 }
 
 
