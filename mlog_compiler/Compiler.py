@@ -153,6 +153,15 @@ def parse(source_code: str) -> list[str]:
             elif validate('update'):
                 call_type = current_word
 
+            elif validate('bind'):
+                call_type = current_word
+
+            elif validate('move'):
+                call_type = current_word
+
+            elif validate('approach'):
+                call_type = current_word
+
             last_char = line[char_index - 1]
 
             if char == ";":
@@ -327,6 +336,21 @@ def parse(source_code: str) -> list[str]:
                     call = DrawFlush(display_id)
 
                     parsed.append(call.representation)
+
+                elif call_type == "bind":
+                    unit = arguments[0]
+                    parsed.append(f"ubind @{unit}")
+
+                elif call_type == "move":
+                    x = arguments[0]
+                    y = arguments[1]
+                    parsed.append(f"ucontrol move {x} {y} 0 0 0")
+
+                elif call_type == "approach":
+                    x = arguments[0]
+                    y = arguments[1]
+                    radius = arguments[2]
+                    parsed.append(f"ucontrol approach {x} {y} {radius} 0 0")
 
                 elif call_type == "":
                     print(line)

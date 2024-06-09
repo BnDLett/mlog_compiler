@@ -53,6 +53,19 @@ print(item_amount, 1);
 print("Created by: [#003ec8]BnDLett", 2);
 """
 
+sample_4 = """
+// Variable grabbing
+var radius = 4;
+sense(pos_x, point1, x);
+sense(pos_y, point1, y);
+
+// Binding
+bind(poly);
+
+// Controlling
+approach(pos_x, pos_y, radius);
+"""
+
 
 def main(fi: TextIOWrapper | str = None):
     source = ""
@@ -83,4 +96,4 @@ def main(fi: TextIOWrapper | str = None):
 
 
 if __name__ == '__main__':
-    main(sample_3)
+    main(sample_4)
