@@ -120,7 +120,7 @@ def parse(source_code: str) -> list[str]:
 
             if char == ";":
                 if call_type == 'var':
-                    var_name = line_split[index + offset]
+                    var_name = line_split[1]
 
                     # if "not" in line_split:
                     #     # var_data = line_split[index + (offset + 3)]
@@ -143,7 +143,7 @@ def parse(source_code: str) -> list[str]:
                         break
 
                 elif call_type == 'str':
-                    var_name = line_split[index + offset]
+                    var_name = line_split[1]
                     var_data = current_word
                     var = Assignment(var_data.removesuffix(";"), var_name)
 
@@ -202,8 +202,6 @@ def parse(source_code: str) -> list[str]:
                 parsed.append("END_OF_IF")
 
             current_word += char
-
-        offset -= 1
 
     parsed: list
 

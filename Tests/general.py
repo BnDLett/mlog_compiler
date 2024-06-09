@@ -31,6 +31,7 @@ sense(reactor_temp, reactor1, heat);
 sense(reactor_on, switch1, enabled);
 var not_overheat = reactor_temp < 0.1;
 
+// Primary operation
 var enable == not_overheat and reactor_on;
 set_enabled(reactor1, enable);
 """
