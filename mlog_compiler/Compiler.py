@@ -11,7 +11,7 @@ operations = {
     '>=': 'greaterThanEq',
     '<': 'lessThan',
     '<=': 'lessThanEq',
-    'and': 'land',
+    '&&': 'land',
     '!=': 'notEqual',
     '===': 'strictEqual',
 
@@ -25,7 +25,7 @@ operations = {
     '**': 'pow',
 
     # Bitwise
-    'or': 'or',
+    '||': 'or',
     '<<': 'shl',
     '>>': 'shr',
     '&': 'and',
@@ -136,7 +136,7 @@ def parse(source_code: str) -> list[str]:
                             raise UnknownOperation
                         parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
 
-                    elif len(line_split) == 5 and "not" in line_split:
+                    elif len(line_split) == 4 and line_split[3].startswith("!"):
                         # var_data = line_split[index + (offset + 3)]
                         var_data = current_word
                         parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")

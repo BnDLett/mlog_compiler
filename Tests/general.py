@@ -5,7 +5,7 @@ sample = """
 // Variable assignment
 str example_str = "Hello, world!";
 sense(enabled, switch1, enabled);
-var not_enabled = enabled != 1;
+var not_enabled = !enabled;
 
 // Primary code
 set_enabled(conveyor1, enabled);
@@ -18,7 +18,7 @@ if (not_enabled) {
 
 // Wait testing. (Don't forget your semi-colons, kids)
 sense(button_enabled, switch2, enabled);
-var button_not_enabled = not button_enabled;
+var button_not_enabled = !button_enabled;
 
 set_enabled(switch2, button_not_enabled);
 // Update: I forgot my semicolon on the wait. 😭
@@ -32,7 +32,7 @@ sense(reactor_on, switch1, enabled);
 var not_overheat = reactor_temp < 0.1;
 
 // Primary operation
-var enable == not_overheat and reactor_on;
+var enable = not_overheat && reactor_on;
 set_enabled(reactor1, enable);
 """
 
@@ -66,4 +66,4 @@ def main(fi: TextIOWrapper | str = None):
 
 
 if __name__ == '__main__':
-    main(sample_2)
+    main(sample)
