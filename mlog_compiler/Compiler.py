@@ -2,7 +2,19 @@ from typing import override, List
 
 from mlog_compiler import Assignment, Control, Sense
 from mlog_compiler.Blocks import MessageBlock
-from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist
+from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
+
+operations = {
+    '==': 'equalTo',
+    '>': 'greaterThan',
+    '>=': 'greaterThanEq',
+    '<': 'lessThan',
+    '<=': 'lessThanEq',
+    'and': 'land',
+    'or': 'or',
+    '!=': 'notEqual',
+    '===': 'strictEqual',
+}
 
 
 def validate_line(line: str) -> bool:
@@ -63,7 +75,10 @@ def parse(source_code: str) -> list[str]:
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
 
-            if validate('var'):
+            if validate('str'):
+                call_type = 'str'
+
+            elif validate('var'):
                 call_type = 'var'
 
             elif validate('print'):
@@ -81,18 +96,38 @@ def parse(source_code: str) -> list[str]:
             elif validate('wait'):
                 call_type = "wait"
 
+            elif validate('end'):
+                parsed.append('end')
+                break
+
             last_char = line[char_index - 1]
 
             if char == ";":
                 if call_type == 'var':
                     var_name = line_split[index + offset]
 
-                    if "not" in line_split:
+                    # if "not" in line_split:
+                    #     # var_data = line_split[index + (offset + 3)]
+                    #     var_data = current_word
+                    #     parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
+                    #     break
+                    if len(line_split) == 6:
+                        var_x = line_split[3]
+                        operation = line_split[4]
+                        var_y = line_split[5].removesuffix(";")
+
+                        if operation not in operations.keys():
+                            raise UnknownOperation
+                        parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
+
+                    elif len(line_split) == 5 and "not" in line_split:
                         # var_data = line_split[index + (offset + 3)]
                         var_data = current_word
                         parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
                         break
 
+                elif call_type == 'str':
+                    var_name = line_split[index + offset]
                     var_data = current_word
                     var = Assignment(var_data.removesuffix(";"), var_name)
 
