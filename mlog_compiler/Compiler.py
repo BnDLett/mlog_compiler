@@ -64,7 +64,7 @@ def parse(source_code: str) -> list[str]:
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
 
             if validate('var'):
-                call_type = 'str'
+                call_type = 'var'
 
             elif validate('print'):
                 call_type = "print"
