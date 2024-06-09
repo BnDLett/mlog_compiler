@@ -142,6 +142,11 @@ def parse(source_code: str) -> list[str]:
                         parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
                         break
 
+                    var_data = line_split[3]
+                    var = Assignment(var_data.removesuffix(";"), var_name)
+
+                    parsed.append(var.representation)
+
                 elif call_type == 'str':
                     var_name = line_split[1]
                     var_data = current_word
