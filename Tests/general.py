@@ -3,9 +3,9 @@ import mlog_compiler
 
 sample = """
 // Variable assignment
-str example_str = "Hello, world!";
+var example_str = "Hello, world!";
 sense(enabled, switch1, enabled);
-num not_enabled = not enabled;
+var not_enabled = not enabled;
 
 // Primary code
 set_enabled(conveyor1, enabled);
@@ -18,7 +18,7 @@ if (not_enabled) {
 
 // Wait testing. (Don't forget your semi-colons, kids)
 // sense(button_enabled, switch2, enabled);
-// num button_not_enabled = not button_enabled;
+// var button_not_enabled = not button_enabled;
 
 // set_enabled(switch2, button_not_enabled);
 // Update: I forgot my semicolon on the wait. 😭
