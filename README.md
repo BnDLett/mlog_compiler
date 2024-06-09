@@ -10,6 +10,7 @@ The custom language currently supports the following:
 - if statements
 - sensing data from blocks
 - wait statements
+- basic comparative operations
 
 With much more planned to come.
 
