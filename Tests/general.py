@@ -36,6 +36,23 @@ var enable = not_overheat && reactor_on;
 set_enabled(reactor1, enable);
 """
 
+sample_3 = """
+// Variable retrieval
+sense(item_amount, container1, totalItems);
+var size = item_amount / 4.29;
+
+// Control display
+clear(0, 0, 0, 1);
+rectangle(5, 5, size, 10, 1);
+update(1);
+
+// Message blocks
+print("Total Items: ", 1, false);
+print(item_amount, 1);
+
+print("Created by: [#003ec8]BnDLett", 2);
+"""
+
 
 def main(fi: TextIOWrapper | str = None):
     source = ""
@@ -66,4 +83,4 @@ def main(fi: TextIOWrapper | str = None):
 
 
 if __name__ == '__main__':
-    main(sample)
+    main(sample_3)

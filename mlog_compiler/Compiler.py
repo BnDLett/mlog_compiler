@@ -1,6 +1,4 @@
-from typing import override, List
-
-from mlog_compiler import Assignment, Control, Sense
+from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush
 from mlog_compiler.Blocks import MessageBlock
 from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
 
@@ -91,30 +89,69 @@ def parse(source_code: str) -> list[str]:
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
 
-            if validate('str'):
-                call_type = 'str'
+            if call_type != "":
+                pass
+
+            elif validate('str'):
+                call_type = current_word
 
             elif validate('var'):
-                call_type = 'var'
+                call_type = current_word
 
             elif validate('print'):
-                call_type = "print"
+                call_type = current_word
 
             elif validate('set_enabled'):
-                call_type = "set_enabled"
+                call_type = current_word
 
             elif validate('if'):
-                call_type = "if"
+                call_type = current_word
 
             elif validate('sense'):
-                call_type = "sense"
+                call_type = current_word
 
             elif validate('wait'):
-                call_type = "wait"
+                call_type = current_word
 
             elif validate('end'):
                 parsed.append('end')
                 break
+
+            elif validate('clear'):
+                call_type = current_word
+
+            elif validate('color'):
+                call_type = current_word
+
+            elif validate('packed_color'):
+                call_type = current_word
+
+            elif validate('stroke'):
+                call_type = current_word
+
+            elif validate('line'):
+                call_type = current_word
+
+            elif validate('rectangle'):
+                call_type = current_word
+
+            elif validate('line_rectangle'):
+                call_type = current_word
+
+            elif validate('poly'):
+                call_type = current_word
+
+            elif validate('line_poly'):
+                call_type = current_word
+
+            elif validate('triangle'):
+                call_type = current_word
+
+            elif validate('image'):
+                call_type = current_word
+
+            elif validate('update'):
+                call_type = current_word
 
             last_char = line[char_index - 1]
 
@@ -135,6 +172,7 @@ def parse(source_code: str) -> list[str]:
                         if operation not in operations.keys():
                             raise UnknownOperation
                         parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
+                        break
 
                     elif len(line_split) == 4 and line_split[3].startswith("!"):
                         # var_data = line_split[index + (offset + 3)]
@@ -155,13 +193,18 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(var.representation)
 
                 elif call_type == "print":
+                    flush = True
                     data = arguments[0]
                     sink = arguments[1]
+                    if len(arguments) == 3:
+                        flush = arguments[2].title() == "True"
+
                     call = MessageBlock(int(sink), data)
                     call_repr_list = call.get_processor_representation().split("\n")
 
                     parsed.append(call_repr_list[0])
-                    parsed.append(call_repr_list[1])
+                    if flush:
+                        parsed.append(call_repr_list[1])
 
                 elif call_type == "set_enabled":
                     block = arguments[0]
@@ -182,7 +225,111 @@ def parse(source_code: str) -> list[str]:
                     time = arguments[0]
                     parsed.append(f"wait {time}")
 
+                elif call_type == "clear":
+                    red = arguments[0]
+                    blue = arguments[1]
+                    green = arguments[2]
+                    call = Draw('clear', red, green, blue)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "color":
+                    red = arguments[0]
+                    blue = arguments[1]
+                    green = arguments[2]
+                    alpha = arguments[3]
+                    call = Draw('color', red, green, blue, alpha)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "packed_color":
+                    color = arguments[0]
+                    call = Draw('col', color)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "stroke":
+                    width = arguments[0]
+                    call = Draw('stroke', width)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "line":
+                    x1 = arguments[0]
+                    y1 = arguments[1]
+                    x2 = arguments[2]
+                    y2 = arguments[3]
+                    call = Draw('line', x1, y1, x2, y2)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "rectangle":
+                    x = arguments[0]
+                    y = arguments[1]
+                    width = arguments[2]
+                    height = arguments[3]
+                    call = Draw('rect', x, y, width, height)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "line_rectangle":
+                    x = arguments[0]
+                    y = arguments[1]
+                    width = arguments[2]
+                    height = arguments[3]
+                    call = Draw('lineRect', x, y, width, height)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "poly":
+                    x = arguments[0]
+                    y = arguments[1]
+                    sides = arguments[2]
+                    radius = arguments[3]
+                    rotation = arguments[4]
+                    call = Draw('poly', x, y, sides, radius, rotation)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "line_poly":
+                    x = arguments[0]
+                    y = arguments[1]
+                    sides = arguments[2]
+                    radius = arguments[3]
+                    rotation = arguments[4]
+                    call = Draw('linePoly', x, y, sides, radius, rotation)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "triangle":
+                    x = arguments[0]
+                    y = arguments[1]
+                    a = arguments[2]
+                    b = arguments[3]
+                    c = arguments[4]
+                    d = arguments[5]  # Holy jeez, 5 arguments!
+                    call = Draw('triangle', x, y, a, b, c, d)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "image":
+                    x = arguments[0]
+                    y = arguments[1]
+                    image = arguments[2]
+                    size = arguments[3]
+                    rotation = arguments[4]
+                    call = Draw('image', x, y, image, size, rotation)
+
+                    parsed.append(call.representation)
+
+                elif call_type == "update":
+                    display_id = arguments[0]
+                    call = DrawFlush(display_id)
+
+                    parsed.append(call.representation)
+
                 elif call_type == "":
+                    print(line)
                     raise CallDoesNotExist
 
                 break

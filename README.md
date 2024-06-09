@@ -13,6 +13,7 @@ The custom language currently supports the following:
 - Logical comparative operations
 - Mathematical operations
 - Bitwise comparative operations
+- Drawing on a display
 
 With much more planned to come.
 

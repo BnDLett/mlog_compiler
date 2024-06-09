@@ -30,3 +30,34 @@ class Sense:
         self.sensor = sensor
         self.target_var = target_var
         self.representation = f"sensor {self.target_var} {self.block} @{self.sensor}"
+
+
+class Draw:
+    representation: str
+    operation: str
+    a: str
+    b: str
+    c: str
+    d: str
+    e: str
+    f: str
+
+    def __init__(self, operation: str, a='0', b='0', c='0', d='0', e='0', f='0'):
+        self.operation = operation
+        self.a = a
+        self.b = b
+        self.c = c
+        self.d = d
+        self.e = e
+        self.f = f
+
+        self.representation = f"draw {operation} {a} {b} {c} {d} {e} {f}"
+
+
+class DrawFlush:
+    representation: str
+    display_id: str
+
+    def __init__(self, display_id: str):
+        self.display_id = display_id
+        self.representation = f"drawflush display{display_id}"
