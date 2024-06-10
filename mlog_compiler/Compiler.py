@@ -291,10 +291,8 @@ def parse(source_code: str) -> list[str]:
                         parsed.append(call_repr_list[1])
 
                 elif call_type == "set_enabled":
-                    arg_index = -1
-
-                    block = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    enabled = get_var(last_func, arguments, functions, arg_index + 1)
+                    block = arguments[0]
+                    enabled = get_var(last_func, arguments, functions, 1)
                     call = Control(block, enabled)
 
                     parsed.append(call.representation)
@@ -440,9 +438,7 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(call.representation)
 
                 elif call_type == "bind":
-                    arg_index = -1
-
-                    unit = get_var(last_func, arguments, functions, arg_index + 1)
+                    unit = arguments[0]
                     parsed.append(f"ubind @{unit}")
 
                 elif call_type == "move":
@@ -461,33 +457,26 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(f"ucontrol approach {x} {y} {radius} 0 0")
 
                 elif call_type == "unit_radar":
-                    arg_index = -1
-
                     target_var = get_target_var(last_func, arguments, functions)
-
-                    target_1 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    target_2 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    target_3 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    sort = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    order = get_var(last_func, arguments, functions, arg_index + 1)
+                    target_1 = arguments[1]
+                    target_2 = arguments[2]
+                    target_3 = arguments[3]
+                    sort = arguments[4]
+                    order = arguments[5]
                     call = UnitRadar(target_var, target_1, target_2, target_3, sort, order)
 
                     parsed.append(call.representation)
 
                 elif call_type == 'floor':
-                    arg_index = -1
-
                     target_var = get_target_var(last_func, arguments, functions)
 
-                    x = get_var(last_func, arguments, functions, arg_index + 1)
+                    x = get_var(last_func, arguments, functions, 1)
 
                     parsed.append(f"op floor {target_var} {x} 0")
 
                 elif call_type == 'ceil':
-                    arg_index = -1
-
                     target_var = get_target_var(last_func, arguments, functions)
-                    x = get_var(last_func, arguments, functions, arg_index + 1)
+                    x = get_var(last_func, arguments, functions, 1)
 
                     parsed.append(f"op ceil {target_var} {x} 0")
 
