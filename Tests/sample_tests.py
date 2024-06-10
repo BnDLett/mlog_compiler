@@ -1,5 +1,4 @@
-from io import TextIOWrapper
-import mlog_compiler
+from mlog_compiler.RunCompiler import mlog_compile
 
 sample = """
 // Variable assignment
@@ -67,33 +66,11 @@ approach(pos_x, pos_y, radius);
 """
 
 
-def main(fi: TextIOWrapper | str = None):
-    source = ""
-    running = False
+if __name__ == "__main__":
+    result = mlog_compile(sample_4)
 
-    if fi is None:
-        running = True
-    elif type(fi) is TextIOWrapper:
-        source = fi.read()
-    elif type(fi) is str:
-        source = fi
-
-    while running:
-        result = input("> ")
-        stripped_result = result.strip()
-
-        if stripped_result == "exit()" or stripped_result == "":
-            break
-
-        source += f"{result}\n"
-
-    result = mlog_compiler.parse(source.removesuffix("\n"))
     buffer = ""
 
     for line in result:
         buffer += f"{line}\n"
     print(buffer.removesuffix("\n"))
-
-
-if __name__ == '__main__':
-    main(sample_4)
