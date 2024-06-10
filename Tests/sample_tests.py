@@ -54,15 +54,45 @@ print("Created by: [#003ec8]BnDLett", 2);
 
 sample_4 = """
 // Variable grabbing
-var radius = 4;
+var radius = 10;
 sense(pos_x, point1, x);
 sense(pos_y, point1, y);
+
+unit_radar(unit, player, ally, any, distance, 1);
+sense(ally_x, unit, x);
+sense(ally_y, unit, y);
+
+floor(floored_x, ally_x);
+floor(floored_y, ally_y);
+
+sense(switch_enabled, switch1, enabled);
+var not_enabled = !switch_enabled;
+
+var diff_x = floored_x - @thisx;
+var diff_y = floored_y - @thisy;
+floor(diff_x, diff_x);
+floor(diff_y, diff_y);
 
 // Binding
 bind(poly);
 
 // Controlling
-approach(pos_x, pos_y, radius);
+if (switch_enabled) {
+    approach(floored_x, floored_y, radius);
+}
+if (not_enabled) {
+    approach(pos_x, pos_y, radius);
+}
+
+// Data printing
+print("x: ", 1, 0);
+print(diff_x, 1, 0);
+print("\\n", 1, 0);
+
+print("y: ", 1, 0);
+print(diff_y, 1);
+
+print("Created by: [#003ec8]BnDLett", 2);
 """
 
 

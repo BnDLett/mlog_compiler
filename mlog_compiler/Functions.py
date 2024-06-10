@@ -61,3 +61,23 @@ class DrawFlush:
     def __init__(self, display_id: str):
         self.display_id = display_id
         self.representation = f"drawflush display{display_id}"
+
+
+class UnitRadar:
+    representation: str
+    target_1: str
+    target_2: str
+    target_3: str
+    sort: str
+    order: str
+    target_var: str
+
+    def __init__(self, target_var: str, target_1: str, target_2: str, target_3: str, sort: str, order: str):
+        self.target_var = target_var
+        self.target_1 = target_1
+        self.target_2 = target_2
+        self.target_3 = target_3
+        self.sort = sort
+        self.order = order
+
+        self.representation = f"uradar {target_1} {target_2} {target_3} {sort} 0 {order} {target_var}"

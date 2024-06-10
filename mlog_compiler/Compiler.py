@@ -1,4 +1,4 @@
-from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush
+from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush, UnitRadar
 from mlog_compiler.Blocks import MessageBlock
 from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
 
@@ -162,6 +162,15 @@ def parse(source_code: str) -> list[str]:
             elif validate('approach'):
                 call_type = current_word
 
+            elif validate('unit_radar'):
+                call_type = current_word
+
+            elif validate('floor'):
+                call_type = current_word
+
+            elif validate('ceil'):
+                call_type = current_word
+
             last_char = line[char_index - 1]
 
             if char == ";":
@@ -185,8 +194,8 @@ def parse(source_code: str) -> list[str]:
 
                     elif len(line_split) == 4 and line_split[3].startswith("!"):
                         # var_data = line_split[index + (offset + 3)]
-                        var_data = current_word
-                        parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
+                        var_data = current_word.removeprefix('!').removesuffix(";")
+                        parsed.append(f"op notEqual {var_name} {var_data} 1")
                         break
 
                     var_data = line_split[3]
@@ -351,6 +360,29 @@ def parse(source_code: str) -> list[str]:
                     y = arguments[1]
                     radius = arguments[2]
                     parsed.append(f"ucontrol approach {x} {y} {radius} 0 0")
+
+                elif call_type == "unit_radar":
+                    target_var = arguments[0]
+                    target_1 = arguments[1]
+                    target_2 = arguments[2]
+                    target_3 = arguments[3]
+                    sort = arguments[4]
+                    order = arguments[5]
+                    call = UnitRadar(target_var, target_1, target_2, target_3, sort, order)
+
+                    parsed.append(call.representation)
+
+                elif call_type == 'floor':
+                    target_var = arguments[0]
+                    x = arguments[1]
+
+                    parsed.append(f"op floor {target_var} {x} 0")
+
+                elif call_type == 'ceil':
+                    target_var = arguments[0]
+                    x = arguments[1]
+
+                    parsed.append(f"op ceil {target_var} {x} 0")
 
                 elif call_type == "":
                     print(line)
