@@ -51,8 +51,13 @@ def index_starts_with(starts_with: str, iterable: list | tuple):
 
 
 def parse(source_code: str) -> list[str]:
-    parsed = []
     source_code_split = source_code.split("\n")
+    parsed = []
+    branch_queue = []
+    branch_call_queue = {
+        'if': 0,
+        'while': 0,
+    }
 
     # for index, word in enumerate(source_code_split):
     #     if word == "//":
@@ -69,11 +74,8 @@ def parse(source_code: str) -> list[str]:
     #     elif word == 'str':
     #         pass
 
-    offset = 1
-
     for index, line in enumerate(source_code_split):
         if line.startswith("//"):
-            offset -= 1
             continue
         elif validate_line(line):
             print(f"[{str(index).rjust(3, "0")}] {line}")
@@ -169,6 +171,22 @@ def parse(source_code: str) -> list[str]:
                 call_type = current_word
 
             elif validate('ceil'):
+                call_type = current_word
+
+            elif validate('get_link'):
+                call_type = current_word
+
+            elif validate('stop'):
+                parsed.append('stop')
+                break
+
+            elif validate('pack_color'):
+                call_type = current_word
+
+            elif validate('lookup'):
+                call_type = current_word
+
+            elif validate('while'):
                 call_type = current_word
 
             last_char = line[char_index - 1]
@@ -384,6 +402,28 @@ def parse(source_code: str) -> list[str]:
 
                     parsed.append(f"op ceil {target_var} {x} 0")
 
+                elif call_type == 'get_link':
+                    target_var = arguments[0]
+                    link_num = arguments[1]
+
+                    parsed.append(f'getlink {target_var} {link_num}')
+
+                elif call_type == 'pack_color':
+                    target_var = arguments[0]
+                    red = arguments[1]
+                    green = arguments[2]
+                    blue = arguments[3]
+                    alpha = arguments[4]
+
+                    parsed.append(f'packcolor {target_var} {red} {green} {blue} {alpha}')
+
+                elif call_type == 'lookup':
+                    target_var = arguments[0]
+                    lookup_type = arguments[1]
+                    target_num = arguments[2]
+
+                    parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
+
                 elif call_type == "":
                     print(line)
                     raise CallDoesNotExist
@@ -405,22 +445,40 @@ def parse(source_code: str) -> list[str]:
             elif char == "," and in_parentheses:
                 arguments.append(current_word)
             elif char == "{" and not in_quotes:
-                parsed.append(f"START_OF_IF {arguments[0]}")
+                parsed.append(f"START_OF_BLOCK_{call_type}_{index} {arguments[0]}")
+                branch_queue.append(f"{call_type}_{index}")
+
+                branch_call_queue[call_type] += 1
             elif char == "}" and not in_quotes:
-                parsed.append("END_OF_IF")
+                parsed.append(f"END_OF_BLOCK_{branch_queue.pop(-1)}")
 
             current_word += char
 
-    parsed: list
-
-    while "END_OF_IF" in parsed:
-        start_index = index_starts_with("START_OF_IF", parsed)
-        end_index = parsed.index("END_OF_IF")
+    while branch_call_queue['if'] >= 1:
+        start_index = index_starts_with("START_OF_BLOCK_if", parsed)
         sof_line: str = parsed[start_index]
+        split_line = sof_line.split("_")
+        block_id = split_line[4].split(" ")[0]
+
+        end_index = parsed.index(f"END_OF_BLOCK_if_{block_id}")
         condition_var = sof_line.split(" ")[1]
 
-        parsed[start_index] = f"jump {end_index} notEqual {condition_var} 1"
+        parsed[start_index] = f"jump {end_index - branch_call_queue['if']} notEqual {condition_var} 1"
         parsed.pop(end_index)
+        branch_call_queue['if'] -= 1
+
+    while branch_call_queue['while'] >= 1:
+        start_index = index_starts_with("START_OF_BLOCK_while", parsed)
+        sof_line: str = parsed[start_index]
+        split_line = sof_line.split("_")
+        block_id = split_line[4].split(" ")[0]
+
+        end_index = parsed.index(f"END_OF_BLOCK_while_{block_id}")
+        condition_var = sof_line.split(" ")[1]
+
+        parsed[end_index] = f"jump {start_index} notEqual {condition_var} 0"
+        parsed.pop(start_index)
+        branch_call_queue['while'] -= 1
 
     parsed.append('end')
     return parsed

@@ -15,6 +15,7 @@ The custom language currently supports the following:
 - Bitwise comparative operations
 - Drawing on a display
 - Unit binding and (basic) controlling. 
+- And more!
 
 With much more planned to come.
 

@@ -95,12 +95,32 @@ print(diff_y, 1);
 print("Created by: [#003ec8]BnDLett", 2);
 """
 
+sample_5 = """
+var run = 1;
+var num = 0;
+while (run) {
+    print(num, 1);
+    var num = num + 1;
+}
+
+if (cond) {
+    print(1, 2);
+    if (cond_2) {
+        print(2, 2);
+    }
+    print(3, 2);
+}
+"""
+
+sample_to_run = sample_5
 
 if __name__ == "__main__":
-    result = mlog_compile(sample_4)
+    result = mlog_compile(sample_to_run)
 
     buffer = ""
 
-    for line in result:
+    for index, line in enumerate(result):
+        # buffer += f"[{str(index).rjust(3, '0')}] {line}\n"
         buffer += f"{line}\n"
+
     print(buffer.removesuffix("\n"))
