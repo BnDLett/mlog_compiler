@@ -57,7 +57,10 @@ def parse(source_code: str) -> list[str]:
     branch_call_queue = {
         'if': 0,
         'while': 0,
+        'def': 0,
     }
+    functions = {}
+    func_references = 0
 
     # for index, word in enumerate(source_code_split):
     #     if word == "//":
@@ -87,6 +90,7 @@ def parse(source_code: str) -> list[str]:
         call_type = ""
         line_split = line.strip().split(" ")
         arguments = []
+        func_name = ''
 
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
@@ -188,6 +192,19 @@ def parse(source_code: str) -> list[str]:
 
             elif validate('while'):
                 call_type = current_word
+
+            elif validate('read'):
+                call_type = current_word
+
+            elif validate('write'):
+                call_type = current_word
+
+            elif validate('def'):
+                call_type = current_word
+
+            elif current_word in functions.keys():
+                call_type = 'func_call'
+                func_name = current_word
 
             last_char = line[char_index - 1]
 
@@ -424,6 +441,27 @@ def parse(source_code: str) -> list[str]:
 
                     parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
 
+                elif call_type == 'read':
+                    target_var = arguments[0]
+                    target_value = arguments[1]
+                    storage_type = arguments[2]
+                    target_id = arguments[3]
+
+                    parsed.append(f"read {target_var} {storage_type}{target_id} {target_value}")
+
+                elif call_type == 'write':
+                    target_var = arguments[0]
+                    target_value = arguments[1]
+                    storage_type = arguments[2]
+                    target_id = arguments[3]
+
+                    parsed.append(f"write {target_var} {storage_type}{target_id} {target_value}")
+
+                elif call_type == 'func_call':
+                    print(functions[func_name]['arguments'])
+                    func_references += 1
+                    parsed.append(f'FUNC_REFERENCE_{func_name}-({', '.join(arguments)})')
+
                 elif call_type == "":
                     print(line)
                     raise CallDoesNotExist
@@ -449,6 +487,16 @@ def parse(source_code: str) -> list[str]:
                 branch_queue.append(f"{call_type}_{index}")
 
                 branch_call_queue[call_type] += 1
+
+                if call_type == 'def':
+                    line_split = line.split(" ")
+                    function_name = line_split[1].split('(')[0]
+                    # print(function_name)
+
+                    functions[function_name] = {
+                        'arguments': arguments,
+                    }
+
             elif char == "}" and not in_quotes:
                 parsed.append(f"END_OF_BLOCK_{branch_queue.pop(-1)}")
 
@@ -479,6 +527,24 @@ def parse(source_code: str) -> list[str]:
         parsed[end_index] = f"jump {start_index} notEqual {condition_var} 0"
         parsed.pop(start_index)
         branch_call_queue['while'] -= 1
+
+    while func_references >= 1:
+        # This shouldn't be accessed yet.
+        break
+
+    while branch_call_queue['def'] >= 1:
+        # START_OF_BLOCK_def_1 arg_1
+        # 0     1  2     3   4     5
+        start_index = index_starts_with("START_OF_BLOCK_def", parsed)
+        sof_line: str = parsed[start_index]
+        split_line = sof_line.split("_")
+        block_id = split_line[4].split(" ")[0]
+        end_index = parsed.index(f"END_OF_BLOCK_def_{block_id}")
+
+        # parsed[start_index] = f""
+
+        # This shouldn't be accessed yet.
+        break
 
     parsed.append('end')
     return parsed

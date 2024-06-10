@@ -112,7 +112,17 @@ if (cond) {
 }
 """
 
-sample_to_run = sample_5
+sample_6 = """
+def foo(arg_1, arg_2, arg_3) {
+    print(arg_1, 1);
+    var next = arg_2 + arg_3;
+    print(next, 2);
+}
+
+foo(X, Y, Z);
+"""
+
+sample_to_run = sample_6
 
 if __name__ == "__main__":
     result = mlog_compile(sample_to_run)

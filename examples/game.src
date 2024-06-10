@@ -1,0 +1,58 @@
+// Assigning values
+var size_x = 10;
+var size_y = 10;
+
+var max_x = 176 - size_x;
+var min_x = 0;
+
+var max_y = 176 - size_y;
+var min_y = 0;
+
+var pos_x = 0;
+var pos_y = 0;
+
+while (true) {
+    var momentum_x = 0;
+    var momentum_y = 0;
+
+    // Sensing values.
+    sense(up, switch1, enabled);
+    sense(left, switch2, enabled);
+    sense(down, switch3, enabled);
+    sense(right, switch4, enabled);
+
+    // momentum
+    var momentum_y = momentum_y + up;
+    var momentum_y = momentum_y - down;
+    var momentum_x = momentum_x + right;
+    var momentum_x = momentum_x - left;
+
+    // changing position
+    var pos_y = pos_y + momentum_y;
+    var pos_x = pos_x + momentum_x;
+
+    // Check physics violations
+    var bottom_wall = pos_y > max_y;
+    var top_wall = pos_y < min_y;
+
+    var right_wall = pos_x > max_x;
+    var left_wall = pos_x < min_x;
+
+    var y_violated = bottom_wall || top_wall;
+    var x_violated = right_wall || left_wall;
+
+    if (y_violated) {
+        var pos_y = old_y;
+    }
+    if (x_violated) {
+        var pos_x = old_x;
+    }
+
+    // Writing to display
+    clear(0, 0, 0, 1);
+    rectangle(pos_x, pos_y, size_x, size_y);
+    update(1);
+
+    var old_y = pos_y;
+    var old_x = pos_x;
+}
