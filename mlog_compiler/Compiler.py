@@ -463,7 +463,7 @@ def parse(source_code: str) -> list[str]:
         end_index = parsed.index(f"END_OF_BLOCK_if_{block_id}")
         condition_var = sof_line.split(" ")[1]
 
-        parsed[start_index] = f"jump {end_index - branch_call_queue['if']} notEqual {condition_var} 1"
+        parsed[start_index] = f"jump {end_index} notEqual {condition_var} 1"
         parsed.pop(end_index)
         branch_call_queue['if'] -= 1
 

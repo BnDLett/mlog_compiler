@@ -1,6 +1,6 @@
 from mlog_compiler.RunCompiler import mlog_compile
 
-sample = """
+sample_1 = """
 // Variable assignment
 str example_str = "Hello, world!";
 sense(enabled, switch1, enabled);
@@ -112,7 +112,7 @@ if (cond) {
 }
 """
 
-sample_to_run = sample_5
+sample_to_run = sample_1
 
 if __name__ == "__main__":
     result = mlog_compile(sample_to_run)
