@@ -112,7 +112,7 @@ if (cond) {
 }
 """
 
-sample_to_run = sample_1
+sample_to_run = sample_5
 
 if __name__ == "__main__":
     result = mlog_compile(sample_to_run)
