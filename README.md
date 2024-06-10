@@ -1,6 +1,14 @@
 # mlog_compiler
 A Python program that compiles a custom language into mlog.
 
+# Migration from 0.13.x to 0.14.x
+A lot of functionality has changed in `0.14.x`. If you try to compile any `0.13.x` compatible code, then you may run into
+issues. In order to make the code functional again, you may need to implement a main function. Examples of that are
+shown in the "examples" folder. Every example in it works.
+
+This is overall a major change to the structure of the compiled code, so do expect bugs. If you do encounter a bug, then
+please do open an issue with it so that I (or anyone else) can squash it.
+
 # What is currently supported?
 The custom language currently supports the following:
 - Print statements
@@ -15,48 +23,19 @@ The custom language currently supports the following:
 - Bitwise comparative operations
 - Drawing on a display
 - Unit binding and (basic) controlling. 
+- Functions
 - And more!
 
-With much more planned to come.
-
-# What is an example of it in use?
-Here is an example of it in use:
-```cpp
-// Variable assignment
-str example_str = "Hello, world!";
-sense(enabled, switch1, enabled);
-num not_enabled = not enabled;
-
-// Primary code
-set_enabled(conveyor1, enabled);
-if (enabled) {
-    print("The button is enabled.", 1);
-}
-if (not_enabled) {
-    print("The button is disabled.", 1);
-}
-```
-This compiles down to:
-```mlog
-set example_str "Hello, world!"
-sensor enabled switch1 @enabled
-op notEqual not_enabled enabled 1
-control enabled conveyor1 enabled 0 0 0
-jump 7 notEqual enabled 1
-print "The button is enabled."
-printflush message1
-jump 10 notEqual not_enabled 1
-print "The button is disabled."
-printflush message1
-end
-```
+With more planned to come.
 
 # I need your help.
 ## The situation
-As of now, the language is still under heavy development. We're missing a lot of features.
+Currently, the language has had little feedback -- the syntax is based only on my personal experience. Not only that,
+but as the language has grown, it has also had less and less debugging ran (only the bare minimum for functions).
 ## How can you help.
-Recommending changes to the syntax would be greatly appreciated. Alongside that, suggestions for what the language
-should be called would also be appreciated.
+Providing feedback and reporting bugs in the issues tab would be greatly appreciated. Alongside that, but the language
+has gone unnamed ever since it has begun development. Opening a new discussion with an idea for a name would also be
+greatly appreciated. Although, be practical -- I personally prefer not to have a meme name.
 
 I would prefer if suggestions regarding the structure of compiler's code itself is kept to a minimal. This is entirely a
 learning experience for me and I'd prefer to avoid having the code mangled in ways that can make it harder to develop.

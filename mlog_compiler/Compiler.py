@@ -1,3 +1,5 @@
+import json
+
 from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush, UnitRadar
 from mlog_compiler.Blocks import MessageBlock
 from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
@@ -50,9 +52,27 @@ def index_starts_with(starts_with: str, iterable: list | tuple):
             return index
 
 
+def get_target_var(last_func: str, arguments: list[str], functions: dict) -> str:
+    target_var = arguments[0]
+    target_var_split = target_var.split("_")
+
+    if target_var[0] not in "0123456789\'\"" and target_var_split[0] not in functions.keys():
+        target_var = f'{last_func}_{target_var}'
+
+    return target_var
+
+
+def get_var(last_func: str, arguments: list[str], functions: dict, index) -> str:
+    x = get_target_var(last_func, [arguments[index]], functions)
+    return x
+
+
 def parse(source_code: str) -> list[str]:
     source_code_split = source_code.split("\n")
-    parsed = []
+    parsed = [
+        'set main_exit 1',
+        'jump main always',
+    ]
     branch_queue = []
     branch_call_queue = {
         'if': 0,
@@ -61,6 +81,7 @@ def parse(source_code: str) -> list[str]:
     }
     functions = {}
     func_references = 0
+    last_func = ''
 
     # for index, word in enumerate(source_code_split):
     #     if word == "//":
@@ -78,7 +99,7 @@ def parse(source_code: str) -> list[str]:
     #         pass
 
     for index, line in enumerate(source_code_split):
-        if line.startswith("//"):
+        if line.strip().startswith("//"):
             continue
         elif validate_line(line):
             print(f"[{str(index).rjust(3, "0")}] {line}")
@@ -202,6 +223,9 @@ def parse(source_code: str) -> list[str]:
             elif validate('def'):
                 call_type = current_word
 
+            elif validate('return'):
+                call_type = current_word
+
             elif current_word in functions.keys():
                 call_type = 'func_call'
                 func_name = current_word
@@ -210,7 +234,7 @@ def parse(source_code: str) -> list[str]:
 
             if char == ";":
                 if call_type == 'var':
-                    var_name = line_split[1]
+                    var_name = f'{last_func}_{line_split[1]}'
 
                     # if "not" in line_split:
                     #     # var_data = line_split[index + (offset + 3)]
@@ -222,6 +246,9 @@ def parse(source_code: str) -> list[str]:
                         operation = line_split[4]
                         var_y = line_split[5].removesuffix(";")
 
+                        var_x = get_target_var(last_func, [var_x], functions)
+                        var_y = get_target_var(last_func, [var_y], functions)
+
                         if operation not in operations.keys():
                             raise UnknownOperation
                         parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
@@ -230,27 +257,31 @@ def parse(source_code: str) -> list[str]:
                     elif len(line_split) == 4 and line_split[3].startswith("!"):
                         # var_data = line_split[index + (offset + 3)]
                         var_data = current_word.removeprefix('!').removesuffix(";")
+                        var_data = get_target_var(last_func, [var_data], functions)
+
                         parsed.append(f"op notEqual {var_name} {var_data} 1")
                         break
 
-                    var_data = line_split[3]
+                    var_data = get_var(last_func, line_split, functions, 3)
                     var = Assignment(var_data.removesuffix(";"), var_name)
 
                     parsed.append(var.representation)
 
                 elif call_type == 'str':
-                    var_name = line_split[1]
+                    var_name = f'{last_func}_{line_split[1]}'
                     var_data = current_word
                     var = Assignment(var_data.removesuffix(";"), var_name)
 
                     parsed.append(var.representation)
 
                 elif call_type == "print":
+                    arg_index = -1
                     flush = True
-                    data = arguments[0]
-                    sink = arguments[1]
+                    data = get_target_var(last_func, arguments, functions)
+
+                    sink = get_var(last_func, arguments, functions, 1)
                     if len(arguments) == 3:
-                        flush = arguments[2].title() == "True"
+                        flush = get_var(last_func, arguments, functions, arg_index + 1).title() == "True"
 
                     call = MessageBlock(int(sink), data)
                     call_repr_list = call.get_processor_representation().split("\n")
@@ -260,14 +291,16 @@ def parse(source_code: str) -> list[str]:
                         parsed.append(call_repr_list[1])
 
                 elif call_type == "set_enabled":
-                    block = arguments[0]
-                    enabled = arguments[1]
+                    arg_index = -1
+
+                    block = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    enabled = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Control(block, enabled)
 
                     parsed.append(call.representation)
 
                 elif call_type == "sense":
-                    target_var = arguments[0]
+                    target_var = get_var(last_func, arguments, functions, 0)
                     block = arguments[1]
                     to_sense = arguments[2]
                     call = Sense(block, to_sense, target_var)
@@ -275,192 +308,249 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(call.representation)
 
                 elif call_type == "wait":
-                    time = arguments[0]
+                    arg_index = -1
+                    time = get_var(last_func, arguments, functions, arg_index + 1)
                     parsed.append(f"wait {time}")
 
                 elif call_type == "clear":
-                    red = arguments[0]
-                    blue = arguments[1]
-                    green = arguments[2]
+                    arg_index = -1
+
+                    red = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    green = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    blue = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('clear', red, green, blue)
 
                     parsed.append(call.representation)
 
                 elif call_type == "color":
-                    red = arguments[0]
-                    blue = arguments[1]
-                    green = arguments[2]
-                    alpha = arguments[3]
+                    arg_index = -1
+
+                    red = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    blue = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    green = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    alpha = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('color', red, green, blue, alpha)
 
                     parsed.append(call.representation)
 
                 elif call_type == "packed_color":
-                    color = arguments[0]
+                    arg_index = -1
+
+                    color = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('col', color)
 
                     parsed.append(call.representation)
 
                 elif call_type == "stroke":
-                    width = arguments[0]
+                    arg_index = -1
+
+                    width = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('stroke', width)
 
                     parsed.append(call.representation)
 
                 elif call_type == "line":
-                    x1 = arguments[0]
-                    y1 = arguments[1]
-                    x2 = arguments[2]
-                    y2 = arguments[3]
+                    arg_index = -1
+
+                    x1 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y1 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    x2 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y2 = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('line', x1, y1, x2, y2)
 
                     parsed.append(call.representation)
 
                 elif call_type == "rectangle":
-                    x = arguments[0]
-                    y = arguments[1]
-                    width = arguments[2]
-                    height = arguments[3]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    width = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    height = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('rect', x, y, width, height)
 
                     parsed.append(call.representation)
 
                 elif call_type == "line_rectangle":
-                    x = arguments[0]
-                    y = arguments[1]
-                    width = arguments[2]
-                    height = arguments[3]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    width = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    height = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('lineRect', x, y, width, height)
 
                     parsed.append(call.representation)
 
                 elif call_type == "poly":
-                    x = arguments[0]
-                    y = arguments[1]
-                    sides = arguments[2]
-                    radius = arguments[3]
-                    rotation = arguments[4]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    sides = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    radius = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    rotation = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('poly', x, y, sides, radius, rotation)
 
                     parsed.append(call.representation)
 
                 elif call_type == "line_poly":
-                    x = arguments[0]
-                    y = arguments[1]
-                    sides = arguments[2]
-                    radius = arguments[3]
-                    rotation = arguments[4]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    sides = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    radius = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    rotation = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('linePoly', x, y, sides, radius, rotation)
 
                     parsed.append(call.representation)
 
                 elif call_type == "triangle":
-                    x = arguments[0]
-                    y = arguments[1]
-                    a = arguments[2]
-                    b = arguments[3]
-                    c = arguments[4]
-                    d = arguments[5]  # Holy jeez, 5 arguments!
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    a = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    b = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    c = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    d = get_var(last_func, arguments, functions, arg_index + 1)  # Holy jeez, 5 arguments!
                     call = Draw('triangle', x, y, a, b, c, d)
 
                     parsed.append(call.representation)
 
                 elif call_type == "image":
-                    x = arguments[0]
-                    y = arguments[1]
-                    image = arguments[2]
-                    size = arguments[3]
-                    rotation = arguments[4]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    image = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    size = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    rotation = get_var(last_func, arguments, functions, arg_index + 1)
                     call = Draw('image', x, y, image, size, rotation)
 
                     parsed.append(call.representation)
 
                 elif call_type == "update":
-                    display_id = arguments[0]
+                    arg_index = -1
+
+                    display_id = get_var(last_func, arguments, functions, arg_index + 1)
                     call = DrawFlush(display_id)
 
                     parsed.append(call.representation)
 
                 elif call_type == "bind":
-                    unit = arguments[0]
+                    arg_index = -1
+
+                    unit = get_var(last_func, arguments, functions, arg_index + 1)
                     parsed.append(f"ubind @{unit}")
 
                 elif call_type == "move":
-                    x = arguments[0]
-                    y = arguments[1]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index + 1)
                     parsed.append(f"ucontrol move {x} {y} 0 0 0")
 
                 elif call_type == "approach":
-                    x = arguments[0]
-                    y = arguments[1]
-                    radius = arguments[2]
+                    arg_index = -1
+
+                    x = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    y = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    radius = get_var(last_func, arguments, functions, arg_index + 1)
                     parsed.append(f"ucontrol approach {x} {y} {radius} 0 0")
 
                 elif call_type == "unit_radar":
-                    target_var = arguments[0]
-                    target_1 = arguments[1]
-                    target_2 = arguments[2]
-                    target_3 = arguments[3]
-                    sort = arguments[4]
-                    order = arguments[5]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+
+                    target_1 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    target_2 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    target_3 = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    sort = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    order = get_var(last_func, arguments, functions, arg_index + 1)
                     call = UnitRadar(target_var, target_1, target_2, target_3, sort, order)
 
                     parsed.append(call.representation)
 
                 elif call_type == 'floor':
-                    target_var = arguments[0]
-                    x = arguments[1]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+
+                    x = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f"op floor {target_var} {x} 0")
 
                 elif call_type == 'ceil':
-                    target_var = arguments[0]
-                    x = arguments[1]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    x = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f"op ceil {target_var} {x} 0")
 
                 elif call_type == 'get_link':
-                    target_var = arguments[0]
-                    link_num = arguments[1]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    link_num = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f'getlink {target_var} {link_num}')
 
                 elif call_type == 'pack_color':
-                    target_var = arguments[0]
-                    red = arguments[1]
-                    green = arguments[2]
-                    blue = arguments[3]
-                    alpha = arguments[4]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    red = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    green = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    blue = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    alpha = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f'packcolor {target_var} {red} {green} {blue} {alpha}')
 
                 elif call_type == 'lookup':
-                    target_var = arguments[0]
-                    lookup_type = arguments[1]
-                    target_num = arguments[2]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    lookup_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    target_num = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
 
                 elif call_type == 'read':
-                    target_var = arguments[0]
-                    target_value = arguments[1]
-                    storage_type = arguments[2]
-                    target_id = arguments[3]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    target_value = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    storage_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    target_id = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f"read {target_var} {storage_type}{target_id} {target_value}")
 
                 elif call_type == 'write':
-                    target_var = arguments[0]
-                    target_value = arguments[1]
-                    storage_type = arguments[2]
-                    target_id = arguments[3]
+                    arg_index = -1
+
+                    target_var = get_target_var(last_func, arguments, functions)
+                    target_value = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    storage_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
+                    target_id = get_var(last_func, arguments, functions, arg_index + 1)
 
                     parsed.append(f"write {target_var} {storage_type}{target_id} {target_value}")
 
                 elif call_type == 'func_call':
-                    print(functions[func_name]['arguments'])
+                    # print(functions[func_name]['arguments'])
                     func_references += 1
-                    parsed.append(f'FUNC_REFERENCE_{func_name}-({', '.join(arguments)})')
+                    parsed.append(f'FUNC_REFERENCE_{func_name}-["{'", "'.join(arguments)}"]-{last_func}')
+
+                elif call_type == "return":
+                    # return var;
+                    line_split = line.strip().split(" ")
+                    part_to_return = line_split[1].removesuffix(";")
+                    full_to_return = f"set {last_func}_ret {last_func}_{part_to_return}"
+
+                    parsed.append(full_to_return)
 
                 elif call_type == "":
                     print(line)
@@ -480,14 +570,9 @@ def parse(source_code: str) -> list[str]:
                 in_parentheses = False
                 arguments.append(current_word)
                 continue
-            elif char == "," and in_parentheses:
+            elif char == "," and in_parentheses and not in_quotes:
                 arguments.append(current_word)
             elif char == "{" and not in_quotes:
-                parsed.append(f"START_OF_BLOCK_{call_type}_{index} {arguments[0]}")
-                branch_queue.append(f"{call_type}_{index}")
-
-                branch_call_queue[call_type] += 1
-
                 if call_type == 'def':
                     line_split = line.split(" ")
                     function_name = line_split[1].split('(')[0]
@@ -497,54 +582,100 @@ def parse(source_code: str) -> list[str]:
                         'arguments': arguments,
                     }
 
+                    last_func = function_name
+                    parsed.append(f"START_OF_BLOCK_{call_type}_{index}_{function_name} {arguments}")
+                else:
+                    parsed.append(f"START_OF_BLOCK_{call_type}_{index} {arguments[0]} {last_func}")
+
+                branch_queue.append(f"{call_type}_{index}")
+
+                branch_call_queue[call_type] += 1
+
             elif char == "}" and not in_quotes:
                 parsed.append(f"END_OF_BLOCK_{branch_queue.pop(-1)}")
 
             current_word += char
 
-    while branch_call_queue['if'] >= 1:
-        start_index = index_starts_with("START_OF_BLOCK_if", parsed)
-        sof_line: str = parsed[start_index]
-        split_line = sof_line.split("_")
-        block_id = split_line[4].split(" ")[0]
-
-        end_index = parsed.index(f"END_OF_BLOCK_if_{block_id}")
-        condition_var = sof_line.split(" ")[1]
-
-        parsed[start_index] = f"jump l{block_id} notEqual {condition_var} 1"
-        parsed[end_index] = f"l{block_id}:"
-        branch_call_queue['if'] -= 1
-
-    while branch_call_queue['while'] >= 1:
-        start_index = index_starts_with("START_OF_BLOCK_while", parsed)
-        sof_line: str = parsed[start_index]
-        split_line = sof_line.split("_")
-        block_id = split_line[4].split(" ")[0]
-
-        end_index = parsed.index(f"END_OF_BLOCK_while_{block_id}")
-        condition_var = sof_line.split(" ")[1]
-
-        parsed[end_index] = f"jump {start_index} notEqual {condition_var} 0"
-        parsed.pop(start_index)
-        branch_call_queue['while'] -= 1
-
     while func_references >= 1:
-        # This shouldn't be accessed yet.
-        break
+        # FUNC_REFERENCE_foo-(X, Y, Z)-main
+        # 0    1         2
+        #                0   1         2
+        start_index = index_starts_with("FUNC_REFERENCE_", parsed)
+        sof_line: str = parsed[start_index]
+        split_line = sof_line.split("_")
+        # split_line[2] will look like this: foo-(X, Y, Z)
+        split_end = split_line[2].split("-")
+        func_name = split_end[0]
+
+        args: tuple = json.loads(split_end[1])
+
+        next_index = start_index
+
+        for index, arg_name in enumerate(functions[func_name]['arguments']):
+            arg = get_target_var(split_end[2], [args[index]], functions)
+            parsed.insert(next_index := next_index + 1, f'set {func_name}_{arg_name} {arg}')
+
+        parsed.insert(next_index := next_index + 1, f'op add {func_name}_exit @counter 1')
+        parsed.insert(next_index + 1, f'jump {func_name} always')
+        parsed.pop(start_index)
+
+        func_references -= 1
 
     while branch_call_queue['def'] >= 1:
-        # START_OF_BLOCK_def_1 arg_1
-        # 0     1  2     3   4     5
+        # START_OF_BLOCK_def_1_foo ['arg_1', 'arg_2', 'arg_3']
+        # 0     1  2     3   4 5         6        7        8
+        # 0                        1
         start_index = index_starts_with("START_OF_BLOCK_def", parsed)
         sof_line: str = parsed[start_index]
         split_line = sof_line.split("_")
         block_id = split_line[4].split(" ")[0]
         end_index = parsed.index(f"END_OF_BLOCK_def_{block_id}")
 
-        # parsed[start_index] = f""
+        func_name = split_line[5].split(" ")[0]
 
-        # This shouldn't be accessed yet.
-        break
+        parsed[start_index] = f"{func_name}:"
+        parsed[end_index] = f"set @counter {func_name}_exit"
+        branch_call_queue['def'] -= 1
+
+    while branch_call_queue['if'] >= 1:
+        # START_OF_BLOCK_if_id COND DEF
+        # 0                    1    2
+        # 0     1  2     3  4
+
+        start_index = index_starts_with("START_OF_BLOCK_if", parsed)
+        sof_line: str = parsed[start_index]
+        split_line = sof_line.split(" ")
+        split_start = split_line[0].split("_")
+
+        block_id = split_start[4]
+        func_name = split_line[2]
+        condition_var = get_var(func_name, split_line, functions, 1)
+
+        end_index = parsed.index(f"END_OF_BLOCK_if_{block_id}")
+
+        parsed[start_index] = f"jump l{block_id} notEqual {condition_var} 1"
+        parsed[end_index] = f"l{block_id}:"
+        branch_call_queue['if'] -= 1
+
+    while branch_call_queue['while'] >= 1:
+        # START_OF_BLOCK_while_id COND DEF
+        # 0                       1    2
+        # 0     1  2     3     4
+
+        start_index = index_starts_with("START_OF_BLOCK_while", parsed)
+        sof_line: str = parsed[start_index]
+        split_line = sof_line.split(" ")
+        split_start = split_line[0].split("_")
+
+        block_id = split_start[4]
+        func_name = split_line[2]
+        condition_var = get_var(func_name, split_line, functions, 1)
+
+        end_index = parsed.index(f"END_OF_BLOCK_while_{block_id}")
+
+        parsed[end_index] = f"jump w{block_id} notEqual {condition_var} 0"
+        parsed[start_index] = f"w{block_id}:"
+        branch_call_queue['while'] -= 1
 
     parsed.append('end')
     return parsed

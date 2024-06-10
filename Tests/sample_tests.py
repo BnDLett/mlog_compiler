@@ -113,13 +113,17 @@ if (cond) {
 """
 
 sample_6 = """
-def foo(arg_1, arg_2, arg_3) {
-    print(arg_1, 1);
-    var next = arg_2 + arg_3;
-    print(next, 2);
+def foo(x) {
+    // <name>_ret is the function's return value
+    var result = x + 2;
+    return result;
 }
 
-foo(X, Y, Z);
+def main() {
+    foo(3);
+    print(foo_ret, 1);
+    var example = 4;
+}
 """
 
 sample_to_run = sample_6
