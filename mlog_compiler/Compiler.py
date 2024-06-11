@@ -6,7 +6,7 @@ from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperat
 
 operations = {
     # Comparative
-    '==': 'equalTo',
+    '==': 'equal',
     '>': 'greaterThan',
     '>=': 'greaterThanEq',
     '<': 'lessThan',
@@ -39,11 +39,12 @@ def validate_line(line: str) -> bool:
     return not line.endswith(";") and not line.endswith("{") and not line.endswith("}") and not can_ignore
 
 
-def validate_call(call: str | list, current_word: str, in_quotes: bool, in_parentheses: bool) -> bool:
+def validate_call(call: str | list, current_word: str, in_quotes: bool, in_parentheses: bool, char_index: int,
+                  line: str) -> bool:
     if type(call) is list:
         return current_word in call and not in_quotes and not in_parentheses
 
-    return current_word == call and not in_quotes and not in_parentheses
+    return current_word == call and not in_quotes and not in_parentheses and line[char_index] != "_"
 
 
 def index_starts_with(starts_with: str, iterable: list | tuple):
@@ -55,6 +56,10 @@ def index_starts_with(starts_with: str, iterable: list | tuple):
 def get_target_var(last_func: str, arguments: list[str], functions: dict) -> str:
     target_var = arguments[0]
     target_var_split = target_var.split("_")
+
+    if len(target_var) == 0:
+        print(f'Warning: target_var was zero for the below argument list:\n{arguments}')
+        return ''
 
     if (target_var[0] not in "!-@0123456789\'\"" and target_var_split[0] not in functions.keys()
             and not target_var_split[-1].startswith('ret')):
@@ -116,7 +121,7 @@ def parse(source_code: str) -> list[str]:
         func_name = ''
 
         for char_index, char in enumerate(line):
-            validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses)
+            validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses, char_index, line)
 
             if call_type != "":
                 pass
@@ -245,7 +250,8 @@ def parse(source_code: str) -> list[str]:
 
             if char == ";":
                 if call_type == 'var':
-                    var_name = f'{last_func}_{line_split[1]}'
+                    # var_name = f'{last_func}_{line_split[1]}'
+                    var_name = get_target_var(last_func, [line_split[1]], functions)
 
                     # if "not" in line_split:
                     #     # var_data = line_split[index + (offset + 3)]

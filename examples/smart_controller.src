@@ -1,0 +1,199 @@
+// Set up globals
+var controller = arc1;
+var obj_size = 8;
+var bank_size = 512;
+// var max_obj_amount = bank_size / obj_size;
+var max_obj_amount = 4;
+// 1776!!!
+var display_res = 176;
+var display_width = 6;
+var display_res_ppb = display_res / display_width;
+var display_res_h = display_res / 2;
+
+
+var global_handle_callbacks_pos_x = 0;
+var global_handle_callbacks_pos_y = 0;
+
+// x y size_x size_y 0 0 0 0
+
+def new_interactive_rect(obj_id, x, y, size_x, size_y) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var x_pos = obj_bank_pos + 0;
+    var y_pos = obj_bank_pos + 1;
+    var size_x_pos = obj_bank_pos + 2;
+    var size_y_pos = obj_bank_pos + 3;
+
+    write(x, x_pos, bank, 1);
+    write(y, y_pos, bank, 1);
+    write(size_x, size_x_pos, bank, 1);
+    write(size_y, size_y_pos, bank, 1);
+}
+
+def get_interactive_rect_pos_x(obj_id) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var x_pos = obj_bank_pos + 0;
+
+    read(pos_x, x_pos, bank, 1);
+    return pos_x;
+}
+def get_interactive_rect_pos_y(obj_id) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var y_pos = obj_bank_pos + 1;
+
+    read(pos_y, y_pos, bank, 1);
+    return pos_y;
+}
+def get_interactive_rect_size_x(obj_id) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var size_x_pos = obj_bank_pos + 2;
+
+    read(size_x, size_x_pos, bank, 1);
+    return size_x;
+}
+def get_interactive_rect_size_y(obj_id) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var size_y_pos = obj_bank_pos + 3;
+
+    read(size_y, size_y_pos, bank, 1);
+    return size_y;
+}
+
+def get_interactive_rect_clicked(obj_id, cursor_x, cursor_y) {
+    var obj_bank_pos = obj_id * global_obj_size;
+    var x_pos = obj_bank_pos + 0;
+    var y_pos = obj_bank_pos + 1;
+    var size_x_pos = obj_bank_pos + 2;
+    var size_y_pos = obj_bank_pos + 3;
+
+    read(size_x, size_x_pos, bank, 1);
+    read(size_y, size_y_pos, bank, 1);
+    read(x, x_pos, bank, 1);
+    read(y, y_pos, bank, 1);
+
+    var radius_x = size_x / 2;
+    var radius_y = size_y / 2;
+
+    var left_border_pos = x - radius_x;
+    var right_border_pos = x + radius_x;
+    var bottom_border_pos = y - radius_y;
+    var top_border_pos = y + radius_y;
+
+    var past_left_border = cursor_x < left_border_pos;
+    var past_right_border = cursor_x > right_border_pos;
+    var past_bottom_border = cursor_y < bottom_border_pos;
+    var past_top_border = cursor_y > top_border_pos;
+
+    var x_is_not_sane = past_left_border || past_right_border;
+    var y_is_not_sane = past_bottom_border || past_top_border;
+
+    var is_not_sane = x_is_not_sane || y_is_not_sane;
+    var is_sane = !is_not_sane;
+
+    sense(user_clicked, arc1, shooting);
+
+    var is_clicked = is_sane && user_clicked;
+
+    if (is_not_sane) {
+        var zero = 0;
+        return zero;
+    }
+    if (is_clicked) {
+        var one = 1;
+        return one;
+    }
+}
+
+def handle_callbacks(index) {
+    var callback_1 = index == 0;
+    var callback_2 = index == 1;
+    var callback_3 = index == 2;
+    var callback_4 = index == 3;
+
+    if (callback_1) {
+        var global_handle_callbacks_pos_y = global_handle_callbacks_pos_y + 1;
+    }
+    if (callback_2) {
+        var global_handle_callbacks_pos_y = global_handle_callbacks_pos_y - 1;
+    }
+    if (callback_3) {
+        var global_handle_callbacks_pos_x = global_handle_callbacks_pos_x + 1;
+    }
+    if (callback_4) {
+        var global_handle_callbacks_pos_x = global_handle_callbacks_pos_x - 1;
+    }
+}
+
+def render() {
+    var count = 0;
+    var cond = 1;
+
+    clear(0, 0, 0);
+
+    sense(aim_x, arc1, shootX);
+    sense(aim_y, arc1, shootY);
+    sense(display_x, display1, x);
+    sense(display_y, display1, y);
+
+    var rel_x = aim_x - display_x;
+    var rel_y = aim_y - display_y;
+
+    var c_pos_pix_x = rel_x * global_display_res_ppb;
+    var c_pos_pix_y = rel_y * global_display_res_ppb;
+
+    var c_pos_centered_x = c_pos_pix_x + global_display_res_h;
+    var c_pos_centered_y = c_pos_pix_y + global_display_res_h;
+
+    var c_pos_x = c_pos_centered_x - 2.5;
+    var c_pos_y = c_pos_centered_y - 2.5;
+
+    var c_pos_real_x = c_pos_centered_x - 7.5;
+    var c_pos_real_y = c_pos_centered_y - 7.5;
+
+    rectangle(c_pos_x, c_pos_y, 5, 5);
+
+    while (render_cond) {
+        var cond = count <= global_max_obj_amount;
+        get_interactive_rect_pos_x(count);
+        get_interactive_rect_pos_y(count);
+        get_interactive_rect_size_x(count);
+        get_interactive_rect_size_y(count);
+
+        var pos_x = get_interactive_rect_pos_x_ret;
+        var pos_y = get_interactive_rect_pos_y_ret;
+        var size_x = get_interactive_rect_size_x_ret;
+        var size_y = get_interactive_rect_size_y_ret;
+
+        get_interactive_rect_clicked(count, c_pos_real_x, c_pos_real_y);
+        var clicked = get_interactive_rect_clicked_ret;
+
+        color(0, 255, 0, 255);
+        if (clicked) {
+            handle_callbacks(count);
+            color(255, 0, 0, 255);
+        }
+
+        line_rectangle(pos_x, pos_y, size_x, size_y);
+
+        color(0, 0, 255, 255);
+        rectangle(global_handle_callbacks_pos_x, global_handle_callbacks_pos_y, 10, 10);
+
+        var count = count + 1;
+    }
+
+    update(1);
+}
+
+def main() {
+    var size = 10;
+    var size_radius = size / 2;
+    var center = global_display_res_h - size_radius;
+
+    new_interactive_rect(0, 20, 30, size, size);
+    new_interactive_rect(1, 20, 10, size, size);
+    new_interactive_rect(2, 30, 20, size, size);
+    new_interactive_rect(3, 10, 20, size, size);
+
+    render();
+    print("Created by: [#003ec8]BnDLett", 1);
+    print("This is a logic schematic made with a logic compiler. See the below github for more information. \n[blue]https://github.com/BnDLett/mlog_compiler", 2);
+}
