@@ -1,0 +1,135 @@
+// This code was not made or designed by BnDLett. It was only made compatible by BnDLett.
+// This code was made by yarplay2222 and hasganter, optimized by Mistral AI (https://mistral.ai/), and was ported to
+// the language by BnDLett.
+
+// Set constants and initial values
+var FOV = 90;
+var RTQ = 10;
+var rayLength = 100;
+var renderDistance = 50;
+var Wx1 = -100;
+var Wy1 = 10;
+var Wx2 = 100;
+var Wy2 = 10;
+var RenX = 0;
+var DegPerRay = FOV / RTQ;
+var neg_FOV = FOV * -1;
+var Rdegree = neg_FOV + 1;
+var RenXWhA = 176 / RTQ;
+var DrWidth = RenXWhA * 10;
+
+var cond = global_Rdegree <= global_FOV;
+var pi = 3.141593;
+
+def to_rad(deg) {
+    // 1rad × 180/π = 57.296°
+    // Degrees × π / 180 = rad
+    var pi_div = global_pi / 180;
+    var rad = deg * pi_div;
+    return rad;
+}
+
+def main() {
+    clear(0, 0, 0);
+    update(1);
+
+    while (global_cond) {
+        // Update global variable 'cond'.
+        var global_cond = global_Rdegree <= global_FOV;
+
+        // Rx = Px + math.sin(math.radians(Rdegree)) * global_rayLength
+        // Ry = Py + math.cos(math.radians(Rdegree)) * global_rayLength
+        to_rad(global_Rdegree);
+        sin(Rx_sin, to_rad_ret);
+        var Rx_p1 = Rx_sin * global_rayLength;
+        var Rx = global_Px + Rx_p1;
+
+        sin(Ry_sin, to_rad_ret);
+        var Ry = Ry_sin * global_rayLength;
+        var Ry = Py + Rx_p1;
+
+        // OvX1, OvY1 = Wx1 - Wx2, Wy1 - Wy2
+        // OvX2, OvY2 = Px - Rx, Px - Ry
+        // OvA = OvX2 * OvY1 - OvY2 * OvX1
+
+        var OvX1 = global_Wx1 - global_Wx2;
+        var OvY1 = global_Wy1 - global_Wy2;
+
+        var OvX2 = global_Px - Rx;
+        var OvY2 = global_Px - Ry;
+
+        var OvA_p1 = OvX2 * OvY1;
+        var OvA_p2 = OvY2 * OvX1;
+        var OvA = OvA_p1 - OvA_p2;
+
+        // if OvA != 0:
+        //     OvB = Px * Ry - Py * Rx
+        //     OvC = Wx1 * Wy2 - Wx2 * Wy1
+        //     OvX = (OvB * OvX1 - OvC * OvX2) / OvA
+        //     OvY = (OvB * OvY1 - OvC * OvY2) / OvA
+
+        if (OvA) {
+            var OvB_p1 = global_Px * Ry;
+            var OvB_p2 = Py * Rx;
+            var OvB = OvB_p1 - OvB_p2;
+
+            var OvC_p1 = global_Wx1 * global_Wy2;
+            var OvC_p2 = global_Wx2 * global_Wy1;
+            var OvC = OvC_p1 - OvC_p2;
+
+            var OvX_p1 = OvB * OvX1;
+            var OvX_p2 = OvC * OvX2;
+            var OvX_p3 = OvX_p1 - OvX_p2;
+            var OvX = OvX_p3 / OvA;
+
+            var OvY_p1 = OvB * OvY1;
+            var OvY_p2 = OvC * OvY2;
+            var OvY_p3 = OvY_p1 - OvY_p2;
+            var OvY = OvX_p3 / OvA;
+
+            // Dx, Dy = Px - OvX, Py - OvY
+            // DOv = math.sqrt(Dx * Dx + Dy * Dy)
+
+            var Dx = global_Px - OvX;
+            var Dy = Py - OvY;
+
+            var DOv_p1 = Dx * Dx;
+            var DOv_p2 = Dy * Dy;
+            var DOv_p3 = DOv_p1 + DOv_p2;
+            sqrt(DOv, DOv_p3);
+
+            // if DOv <= renderDistance:
+            //     Dperc = DOv / global_rayLength
+            //     DrRate = 1 + Dperc ** 6.5
+            //     DrOp = int(255 * math.sin(DrRate)) + 0.5)
+
+            //     # draw color 255 255 255 DrOp 0 0
+            //     # draw rect RenX 0 DrWidth 176 0 0
+
+            var DOv_if_cond = DOv <= global_renderDistance;
+            if (main_DOv_if_cond) {
+                var Dperc = DOv / global_rayLength;
+                var DrRate_p1 = Dperc ** 6.5;
+                var DrRate = 1 + DrRate;
+
+                sin(DrRate_sin, DrRate);
+                var DrOp_p1 = 255 * DrRate_sin;
+                var DrOp_p2 = DrOp_p1 + 0.5;
+                floor(DrOp, DrOp_p2);
+
+                color(255, 255, 255, DrOp);
+                // call = Draw('rect', x, y, width, height)
+                rectangle(global_RenX, 0, global_DrWidth, 176);
+            }
+        }
+        // # op add RenX RenX RenXWhA
+        // Rdegree += DegPerRay
+        // RenX += RenXWhA
+        var global_Rdegree = global_Rdegree + global_DegPerRay;
+        var global_RenX = global_RenX + global_RenXWhA;
+    }
+    // control enabled switch1 1 0 0 0
+    // end
+    set_enabled(switch1, 1);
+    end;
+}

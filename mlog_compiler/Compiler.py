@@ -56,7 +56,7 @@ def get_target_var(last_func: str, arguments: list[str], functions: dict) -> str
     target_var = arguments[0]
     target_var_split = target_var.split("_")
 
-    if (target_var[0] not in "@0123456789\'\"" and target_var_split[0] not in functions.keys()
+    if (target_var[0] not in "!-@0123456789\'\"" and target_var_split[0] not in functions.keys()
             and not target_var_split[-1].startswith('ret')):
         target_var = f'{last_func}_{target_var}'
 
@@ -222,6 +222,15 @@ def parse(source_code: str) -> list[str]:
             elif validate('write'):
                 call_type = current_word
 
+            elif validate('sin'):
+                call_type = current_word
+
+            elif validate('cos'):
+                call_type = current_word
+
+            elif validate('sqrt'):
+                call_type = current_word
+
             elif validate('def'):
                 call_type = current_word
 
@@ -252,6 +261,8 @@ def parse(source_code: str) -> list[str]:
                         var_y = get_target_var(last_func, [var_y], functions)
 
                         if operation not in operations.keys():
+                            print(operation)
+                            print(line)
                             raise UnknownOperation
                         parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
                         break
@@ -525,6 +536,24 @@ def parse(source_code: str) -> list[str]:
                     storage_id = get_var(last_func, arguments, functions, 3)
 
                     parsed.append(f"write {data} {storage_type}{storage_id} {value_pos}")
+
+                elif call_type == 'sin':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op sin {target_var} {value} 0")
+
+                elif call_type == 'cos':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op cos {target_var} {value} 0")
+
+                elif call_type == 'sqrt':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op sqrt {target_var} {value} 0")
 
                 elif call_type == 'func_call':
                     # print(functions[func_name]['arguments'])
