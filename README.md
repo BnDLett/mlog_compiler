@@ -40,7 +40,7 @@ With more planned to come.
 ## The situation
 Currently, the language has had little feedback -- the syntax is based only on my personal experience. Not only that,
 but as the language has grown, it has also had less and less debugging ran (only the bare minimum for functions).
-## How can you help.
+## How you can help
 Providing feedback and reporting bugs in the issues tab would be greatly appreciated. Alongside that, but the language
 has gone unnamed ever since it has begun development. Opening a new discussion with an idea for a name would also be
 greatly appreciated. Although, be practical -- I personally prefer not to have a meme name.
