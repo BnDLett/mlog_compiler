@@ -56,32 +56,34 @@ def get_target_var(last_func: str, arguments: list[str], functions: dict) -> str
     target_var = arguments[0]
     target_var_split = target_var.split("_")
 
-    if target_var[0] not in "0123456789\'\"" and target_var_split[0] not in functions.keys():
+    if (target_var[0] not in "@0123456789\'\"" and target_var_split[0] not in functions.keys()
+            and not target_var_split[-1].startswith('ret')):
         target_var = f'{last_func}_{target_var}'
 
     return target_var
 
 
-def get_var(last_func: str, arguments: list[str], functions: dict, index) -> str:
+def get_var(last_func: str, arguments: list[str], functions: dict, index: int) -> str:
     x = get_target_var(last_func, [arguments[index]], functions)
     return x
 
 
 def parse(source_code: str) -> list[str]:
     source_code_split = source_code.split("\n")
-    parsed = [
-        'set main_exit 1',
-        'jump main always',
-    ]
+    parsed = []
     branch_queue = []
     branch_call_queue = {
         'if': 0,
         'while': 0,
         'def': 0,
     }
-    functions = {}
+    functions = {
+        'global': {
+            'arguments': []
+        }
+    }
     func_references = 0
-    last_func = ''
+    last_func = 'global'
 
     # for index, word in enumerate(source_code_split):
     #     if word == "//":
@@ -509,29 +511,25 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
 
                 elif call_type == 'read':
-                    arg_index = -1
-
                     target_var = get_target_var(last_func, arguments, functions)
-                    target_value = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    storage_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    target_id = get_var(last_func, arguments, functions, arg_index + 1)
+                    value_pos = get_var(last_func, arguments, functions, 1)
+                    storage_type = arguments[2]
+                    storage_id = get_var(last_func, arguments, functions, 3)
 
-                    parsed.append(f"read {target_var} {storage_type}{target_id} {target_value}")
+                    parsed.append(f"read {target_var} {storage_type}{storage_id} {value_pos}")
 
                 elif call_type == 'write':
-                    arg_index = -1
+                    data = get_target_var(last_func, arguments, functions)
+                    value_pos = get_var(last_func, arguments, functions, 1)
+                    storage_type = arguments[2]
+                    storage_id = get_var(last_func, arguments, functions, 3)
 
-                    target_var = get_target_var(last_func, arguments, functions)
-                    target_value = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    storage_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
-                    target_id = get_var(last_func, arguments, functions, arg_index + 1)
-
-                    parsed.append(f"write {target_var} {storage_type}{target_id} {target_value}")
+                    parsed.append(f"write {data} {storage_type}{storage_id} {value_pos}")
 
                 elif call_type == 'func_call':
                     # print(functions[func_name]['arguments'])
                     func_references += 1
-                    parsed.append(f'FUNC_REFERENCE_{func_name}-["{'", "'.join(arguments)}"]-{last_func}')
+                    parsed.append(f'FUNC---REFERENCE---{func_name}---["{'", "'.join(arguments)}"]---{last_func}')
 
                 elif call_type == "return":
                     # return var;
@@ -571,8 +569,12 @@ def parse(source_code: str) -> list[str]:
                         'arguments': arguments,
                     }
 
+                    if branch_call_queue['def'] == 0:
+                        parsed.append('op add main_exit @counter 0')
+                        parsed.append('jump main always')
+
                     last_func = function_name
-                    parsed.append(f"START_OF_BLOCK_{call_type}_{index}_{function_name} {arguments}")
+                    parsed.append(f"START---OF---BLOCK---{call_type}---{index}---{function_name}---{arguments}")
                 else:
                     parsed.append(f"START_OF_BLOCK_{call_type}_{index} {arguments[0]} {last_func}")
 
@@ -586,22 +588,21 @@ def parse(source_code: str) -> list[str]:
             current_word += char
 
     while func_references >= 1:
-        # FUNC_REFERENCE_foo-(X, Y, Z)-main
-        # 0    1         2
-        #                0   1         2
-        start_index = index_starts_with("FUNC_REFERENCE_", parsed)
+        # FUNC---REFERENCE---foo---(X, Y, Z)---main
+        # 0      1           2     3           4
+        start_index = index_starts_with("FUNC---REFERENCE---", parsed)
         sof_line: str = parsed[start_index]
-        split_line = sof_line.split("_")
+        split_line = sof_line.split("---")
         # split_line[2] will look like this: foo-(X, Y, Z)
-        split_end = split_line[2].split("-")
-        func_name = split_end[0]
+        func_name = split_line[2]
 
-        args: tuple = json.loads(split_end[1])
+        args: tuple = json.loads(split_line[3])
 
         next_index = start_index
+        ref_func_name = split_line[4]
 
         for index, arg_name in enumerate(functions[func_name]['arguments']):
-            arg = get_target_var(split_end[2], [args[index]], functions)
+            arg = get_target_var(ref_func_name, [args[index]], functions)
             parsed.insert(next_index := next_index + 1, f'set {func_name}_{arg_name} {arg}')
 
         parsed.insert(next_index := next_index + 1, f'op add {func_name}_exit @counter 1')
@@ -611,16 +612,18 @@ def parse(source_code: str) -> list[str]:
         func_references -= 1
 
     while branch_call_queue['def'] >= 1:
+        # START---OF---BLOCK---def---1---foo---['arg_1', 'arg_2', 'arg_3']
+        # 0       1    2       3     4   5     6
         # START_OF_BLOCK_def_1_foo ['arg_1', 'arg_2', 'arg_3']
         # 0     1  2     3   4 5         6        7        8
         # 0                        1
-        start_index = index_starts_with("START_OF_BLOCK_def", parsed)
+        start_index = index_starts_with("START---OF---BLOCK---def", parsed)
         sof_line: str = parsed[start_index]
-        split_line = sof_line.split("_")
-        block_id = split_line[4].split(" ")[0]
+        split_line = sof_line.split("---")
+        block_id = split_line[4]
         end_index = parsed.index(f"END_OF_BLOCK_def_{block_id}")
 
-        func_name = split_line[5].split(" ")[0]
+        func_name = split_line[5]
 
         parsed[start_index] = f"{func_name}:"
         parsed[end_index] = f"set @counter {func_name}_exit"

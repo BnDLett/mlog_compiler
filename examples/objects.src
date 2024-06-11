@@ -1,0 +1,52 @@
+var obj_length = 8;
+
+def set_x(obj_index, new_x) {
+    // Every object has a length of 8 by default.
+    // "global" must be appended to the start of every global variable; otherwise, it will be used as a local variable
+    // instead.
+    var bank_index = obj_index * global_obj_length;
+
+    // The target data (new_x) is located in the data index of an object's allocation.
+    var data_index = bank_index + 0;
+    write(new_x, data_index, bank, 1);
+}
+
+def get_x(obj_index) {
+    // Every object has a length of 8 by default.
+    // "global" must be appended to the start of every global variable; otherwise, it will be used as a local variable
+    // instead.
+    var bank_index = obj_index * global_obj_length;
+
+    // The target data (res) is located in the data index of an object's allocation.
+    var data_index = bank_index + 0;
+    read(res, data_index, bank, 1);
+    return res;
+}
+
+def main() {
+    set_x(1, 5);
+    set_x(2, 13);
+    set_x(3, 9);
+
+    get_x(1);
+    var ret_1 = get_x_ret;
+
+    get_x(2);
+    var ret_2 = get_x_ret;
+
+    get_x(3);
+    var ret_3 = get_x_ret;
+
+    print("1: ", 0, 0);
+    print(ret_1, 0, 0);
+
+    print("\n2: ", 0, 0);
+    print(ret_2, 0, 0);
+
+    print("\n3: ", 0, 0);
+    print(ret_3, 1);
+}
+
+// 32
+// 44
+// diff: 12
