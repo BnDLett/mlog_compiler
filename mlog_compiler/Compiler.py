@@ -1,4 +1,5 @@
 import json
+import warnings
 
 from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush, UnitRadar
 from mlog_compiler.Blocks import MessageBlock
@@ -30,6 +31,7 @@ operations = {
     '>>': 'shr',
     '&': 'and',
     '^': 'xor',
+    '~': 'not',
 }
 
 
@@ -41,10 +43,12 @@ def validate_line(line: str) -> bool:
 
 def validate_call(call: str | list, current_word: str, in_quotes: bool, in_parentheses: bool, char_index: int,
                   line: str) -> bool:
-    if type(call) is list:
-        return current_word in call and not in_quotes and not in_parentheses
+    if type(call) is str:
+        message = "Using strings for validating a call are deprecated and will no longer work in future updates."
+        warnings.warn(message, DeprecationWarning)
+        return current_word == call and not in_quotes and not in_parentheses and line[char_index] != "_"
 
-    return current_word == call and not in_quotes and not in_parentheses and line[char_index] != "_"
+    return current_word in call and not in_quotes and not in_parentheses
 
 
 def index_starts_with(starts_with: str, iterable: list | tuple):
@@ -71,6 +75,62 @@ def get_target_var(last_func: str, arguments: list[str], functions: dict) -> str
 def get_var(last_func: str, arguments: list[str], functions: dict, index: int) -> str:
     x = get_target_var(last_func, [arguments[index]], functions)
     return x
+
+
+calls = [
+    'str',
+    'var',
+    'print',
+    'set_enabled',
+    'if',
+    'sense',
+    'wait',
+    'end',
+    'clear',
+    'color',
+    'packed_color',
+    'stroke',
+    'line',
+    'rectangle',
+    'line_rectangle',
+    'poly',
+    'line_poly',
+    'triangle',
+    'image',
+    'update',
+    'bind',
+    'move',
+    'approach',
+    'unit_radar',
+    'floor',
+    'ceil',
+    'get_link',
+    'stop',
+    'pack_color',
+    'lookup',
+    'while',
+    'read',
+    'write',
+    'sin',
+    'cos',
+    'sqrt',
+    'def',
+    'return',
+    'max',
+    'min',
+    'angle',
+    'angle_difference',
+    'len',
+    'noise',
+    'absolute',
+    'log',
+    'log10',
+    'random',
+    'tan',
+    'asin',
+    'acos',
+    'atan',
+]
 
 
 def parse(source_code: str) -> list[str]:
@@ -126,120 +186,7 @@ def parse(source_code: str) -> list[str]:
             if call_type != "":
                 pass
 
-            elif validate('str'):
-                call_type = current_word
-
-            elif validate('var'):
-                call_type = current_word
-
-            elif validate('print'):
-                call_type = current_word
-
-            elif validate('set_enabled'):
-                call_type = current_word
-
-            elif validate('if'):
-                call_type = current_word
-
-            elif validate('sense'):
-                call_type = current_word
-
-            elif validate('wait'):
-                call_type = current_word
-
-            elif validate('end'):
-                parsed.append('end')
-                break
-
-            elif validate('clear'):
-                call_type = current_word
-
-            elif validate('color'):
-                call_type = current_word
-
-            elif validate('packed_color'):
-                call_type = current_word
-
-            elif validate('stroke'):
-                call_type = current_word
-
-            elif validate('line'):
-                call_type = current_word
-
-            elif validate('rectangle'):
-                call_type = current_word
-
-            elif validate('line_rectangle'):
-                call_type = current_word
-
-            elif validate('poly'):
-                call_type = current_word
-
-            elif validate('line_poly'):
-                call_type = current_word
-
-            elif validate('triangle'):
-                call_type = current_word
-
-            elif validate('image'):
-                call_type = current_word
-
-            elif validate('update'):
-                call_type = current_word
-
-            elif validate('bind'):
-                call_type = current_word
-
-            elif validate('move'):
-                call_type = current_word
-
-            elif validate('approach'):
-                call_type = current_word
-
-            elif validate('unit_radar'):
-                call_type = current_word
-
-            elif validate('floor'):
-                call_type = current_word
-
-            elif validate('ceil'):
-                call_type = current_word
-
-            elif validate('get_link'):
-                call_type = current_word
-
-            elif validate('stop'):
-                parsed.append('stop')
-                break
-
-            elif validate('pack_color'):
-                call_type = current_word
-
-            elif validate('lookup'):
-                call_type = current_word
-
-            elif validate('while'):
-                call_type = current_word
-
-            elif validate('read'):
-                call_type = current_word
-
-            elif validate('write'):
-                call_type = current_word
-
-            elif validate('sin'):
-                call_type = current_word
-
-            elif validate('cos'):
-                call_type = current_word
-
-            elif validate('sqrt'):
-                call_type = current_word
-
-            elif validate('def'):
-                call_type = current_word
-
-            elif validate('return'):
+            elif validate(calls):
                 call_type = current_word
 
             elif current_word in functions.keys():
@@ -560,6 +507,96 @@ def parse(source_code: str) -> list[str]:
                     value = get_var(last_func, arguments, functions, 1)
 
                     parsed.append(f"op sqrt {target_var} {value} 0")
+
+                elif call_type == 'max':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op max {target_var} {value} {value_2}")
+
+                elif call_type == 'min':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op min {target_var} {value} {value_2}")
+
+                elif call_type == 'angle':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op angle {target_var} {value} {value_2}")
+
+                elif call_type == 'angle_difference':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op angleDiff {target_var} {value} {value_2}")
+
+                elif call_type == 'len':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op len {target_var} {value} {value_2}")
+
+                elif call_type == 'noise':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+                    value_2 = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f"op noise {target_var} {value} {value_2}")
+
+                elif call_type == 'absolute':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op abs {target_var} {value} 0")
+
+                elif call_type == 'log':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op log {target_var} {value} 0")
+
+                elif call_type == 'log10':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op log10 {target_var} {value} 0")
+
+                elif call_type == 'random':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op rand {target_var} {value} 0")
+
+                elif call_type == 'tan':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op tan {target_var} {value} 0")
+
+                elif call_type == 'asin':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op asin {target_var} {value} 0")
+
+                elif call_type == 'acos':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op acos {target_var} {value} 0")
+
+                elif call_type == 'atan':
+                    target_var = get_target_var(last_func, arguments, functions)
+                    value = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f"op atan {target_var} {value} 0")
 
                 elif call_type == 'func_call':
                     # print(functions[func_name]['arguments'])
