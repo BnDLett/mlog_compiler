@@ -56,7 +56,7 @@ you should check the history between your current version and the version that y
 that a breaking change has not been implemented.
 
 ### patch
-A patch, bug fix, or insignificant feature was added. This should never include any non-backwards-compatible
+A patch, bug fix, or insignificant change was added. This should never include any non-backwards-compatible
 changes that will affect source code. With that said, you can freely upgrade patch version without worry about breaking
 changes to the syntax of the language.
 
