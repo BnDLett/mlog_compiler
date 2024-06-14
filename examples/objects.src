@@ -19,7 +19,7 @@ def get_x(obj_index) {
 
     // The target data (res) is located in the data index of an object's allocation.
     var data_index = bank_index + 0;
-    read(res, data_index, bank, 1);
+    var res = read(data_index, bank, 1);
     return res;
 }
 

@@ -1,18 +1,6 @@
 # mlog_compiler
 A Python program that compiles a custom language into mlog.
 
-# Migration from 0.13.x to 0.14.x
-A lot of functionality has changed in `0.14.x`. If you try to compile any `0.13.x` compatible code, then you may run into
-issues. In order to make the code functional again, you may need to implement a main function. Examples of that are
-shown in the "examples" folder. Every example in it works.
-
-This is overall a major change to the structure of the compiled code, so do expect bugs. If you do encounter a bug, then
-please do open an issue with it so that I (or anyone else) can squash it.
-
-It should also be noted that some functions still run legacy arguments, so you may need to specify the functions name
-before a variable if an argument is legacy. For example: `bind(main_unit);`, where `main_unit` would be a unit defined
-by a variable.
-
 ## What is a legacy argument?
 A legacy argument is an argument that does not automatically append the function's name at the start of the argument.
 That may require you to manually append the function's name to the start of the argument if necessary.

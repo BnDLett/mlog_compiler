@@ -33,28 +33,28 @@ def get_interactive_rect_pos_x(obj_id) {
     var obj_bank_pos = obj_id * global_obj_size;
     var x_pos = obj_bank_pos + 0;
 
-    read(pos_x, x_pos, bank, 1);
+    var pos_x = read(x_pos, bank, 1);
     return pos_x;
 }
 def get_interactive_rect_pos_y(obj_id) {
     var obj_bank_pos = obj_id * global_obj_size;
     var y_pos = obj_bank_pos + 1;
 
-    read(pos_y, y_pos, bank, 1);
+    var pos_y = read(pos, y_pos, bank, 1);
     return pos_y;
 }
 def get_interactive_rect_size_x(obj_id) {
     var obj_bank_pos = obj_id * global_obj_size;
     var size_x_pos = obj_bank_pos + 2;
 
-    read(size_x, size_x_pos, bank, 1);
+    var size_x = read(size_x_pos, bank, 1);
     return size_x;
 }
 def get_interactive_rect_size_y(obj_id) {
     var obj_bank_pos = obj_id * global_obj_size;
     var size_y_pos = obj_bank_pos + 3;
 
-    read(size_y, size_y_pos, bank, 1);
+    var size_y = read(size_y_pos, bank, 1);
     return size_y;
 }
 
@@ -65,10 +65,10 @@ def get_interactive_rect_clicked(obj_id, cursor_x, cursor_y) {
     var size_x_pos = obj_bank_pos + 2;
     var size_y_pos = obj_bank_pos + 3;
 
-    read(size_x, size_x_pos, bank, 1);
-    read(size_y, size_y_pos, bank, 1);
-    read(x, x_pos, bank, 1);
-    read(y, y_pos, bank, 1);
+    var size_x = read(size_x_pos, bank, 1);
+    var size_y = read(size_y_pos, bank, 1);
+    var x = read(x_pos, bank, 1);
+    var y = read(y_pos, bank, 1);
 
     var radius_x = size_x / 2;
     var radius_y = size_y / 2;
@@ -89,7 +89,7 @@ def get_interactive_rect_clicked(obj_id, cursor_x, cursor_y) {
     var is_not_sane = x_is_not_sane || y_is_not_sane;
     var is_sane = !is_not_sane;
 
-    sense(user_clicked, arc1, shooting);
+    var user_clicked = sense(arc1, shooting);
 
     var is_clicked = is_sane && user_clicked;
 
@@ -129,10 +129,10 @@ def render() {
 
     clear(0, 0, 0);
 
-    sense(aim_x, arc1, shootX);
-    sense(aim_y, arc1, shootY);
-    sense(display_x, display1, x);
-    sense(display_y, display1, y);
+    var aim_x = sense(arc1, shootX);
+    var aim_y = sense(arc1, shootY);
+    var display_x = sense(display1, x);
+    var display_y = sense(display1, y);
 
     var rel_x = aim_x - display_x;
     var rel_y = aim_y - display_y;

@@ -187,7 +187,7 @@ def parse(source_code: str) -> list[str]:
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses, char_index, line)
 
-            if call_type != "":
+            if call_type != "" and not "assignment":
                 pass
 
             elif validate(calls):
@@ -198,10 +198,6 @@ def parse(source_code: str) -> list[str]:
                 func_name = current_word
 
             last_char = line[char_index - 1]
-            try:
-                next_char = line[char_index + 1]
-            except IndexError:
-                next_char = ""
 
             if char == ";":
                 if call_type == 'var':
@@ -254,11 +250,12 @@ def parse(source_code: str) -> list[str]:
                         parsed.append(var.representation)
 
                 elif call_type == 'str':
-                    var_name = f'{last_func}_{line_split[1]}'
                     var_data = current_word
-                    var = Assignment(var_data.removesuffix(";"), var_name)
+                    for assignment_target in assignments:
+                        var_name = get_target_var(last_func, [assignment_target], functions)
+                        var = Assignment(var_data.removesuffix(";"), var_name)
 
-                    parsed.append(var.representation)
+                        parsed.append(var.representation)
 
                 elif call_type == "print":
                     arg_index = -1
@@ -284,12 +281,13 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(call.representation)
 
                 elif call_type == "sense":
-                    target_var = get_var(last_func, arguments, functions, 0)
-                    block = arguments[1]
-                    to_sense = arguments[2]
-                    call = Sense(block, to_sense, target_var)
+                    block = arguments[0]
+                    to_sense = arguments[1]
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        call = Sense(block, to_sense, target_var)
 
-                    parsed.append(call.representation)
+                        parsed.append(call.representation)
 
                 elif call_type == "wait":
                     arg_index = -1
@@ -443,64 +441,70 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(f"ucontrol approach {x} {y} {radius} 0 0")
 
                 elif call_type == "unit_radar":
-                    target_var = get_target_var(last_func, arguments, functions)
-                    target_1 = arguments[1]
-                    target_2 = arguments[2]
-                    target_3 = arguments[3]
-                    sort = arguments[4]
-                    order = arguments[5]
-                    call = UnitRadar(target_var, target_1, target_2, target_3, sort, order)
+                    target_1 = arguments[0]
+                    target_2 = arguments[1]
+                    target_3 = arguments[2]
+                    sort = arguments[3]
+                    order = arguments[4]
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        call = UnitRadar(target_var, target_1, target_2, target_3, sort, order)
 
-                    parsed.append(call.representation)
+                        parsed.append(call.representation)
 
                 elif call_type == 'floor':
-                    target_var = get_target_var(last_func, arguments, functions)
+                    x = get_var(last_func, arguments, functions, 0)
 
-                    x = get_var(last_func, arguments, functions, 1)
-
-                    parsed.append(f"op floor {target_var} {x} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op floor {target_var} {x} 0")
 
                 elif call_type == 'ceil':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    x = get_var(last_func, arguments, functions, 1)
+                    x = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op ceil {target_var} {x} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op ceil {target_var} {x} 0")
 
                 elif call_type == 'get_link':
                     arg_index = -1
 
-                    target_var = get_target_var(last_func, arguments, functions)
                     link_num = get_var(last_func, arguments, functions, arg_index + 1)
 
-                    parsed.append(f'getlink {target_var} {link_num}')
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f'getlink {target_var} {link_num}')
 
                 elif call_type == 'pack_color':
                     arg_index = -1
 
-                    target_var = get_target_var(last_func, arguments, functions)
                     red = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
                     green = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
                     blue = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
                     alpha = get_var(last_func, arguments, functions, arg_index + 1)
 
-                    parsed.append(f'packcolor {target_var} {red} {green} {blue} {alpha}')
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f'packcolor {target_var} {red} {green} {blue} {alpha}')
 
                 elif call_type == 'lookup':
                     arg_index = -1
 
-                    target_var = get_target_var(last_func, arguments, functions)
                     lookup_type = get_var(last_func, arguments, functions, arg_index := arg_index + 1)
                     target_num = get_var(last_func, arguments, functions, arg_index + 1)
 
-                    parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"lookup {lookup_type} {target_var} {target_num}")
 
                 elif call_type == 'read':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value_pos = get_var(last_func, arguments, functions, 1)
-                    storage_type = arguments[2]
-                    storage_id = get_var(last_func, arguments, functions, 3)
+                    value_pos = get_var(last_func, arguments, functions, 0)
+                    storage_type = arguments[1]
+                    storage_id = get_var(last_func, arguments, functions, 2)
 
-                    parsed.append(f"read {target_var} {storage_type}{storage_id} {value_pos}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"read {target_var} {storage_type}{storage_id} {value_pos}")
 
                 elif call_type == 'write':
                     data = get_target_var(last_func, arguments, functions)
@@ -511,112 +515,129 @@ def parse(source_code: str) -> list[str]:
                     parsed.append(f"write {data} {storage_type}{storage_id} {value_pos}")
 
                 elif call_type == 'sin':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op sin {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op sin {target_var} {value} 0")
 
                 elif call_type == 'cos':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op cos {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op cos {target_var} {value} 0")
 
                 elif call_type == 'sqrt':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op sqrt {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op sqrt {target_var} {value} 0")
 
                 elif call_type == 'max':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op max {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op max {target_var} {value} {value_2}")
 
                 elif call_type == 'min':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op min {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op min {target_var} {value} {value_2}")
 
                 elif call_type == 'angle':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op angle {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op angle {target_var} {value} {value_2}")
 
                 elif call_type == 'angle_difference':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op angleDiff {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op angleDiff {target_var} {value} {value_2}")
 
                 elif call_type == 'len':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op len {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op len {target_var} {value} {value_2}")
 
                 elif call_type == 'noise':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
-                    value_2 = get_var(last_func, arguments, functions, 2)
+                    value = get_var(last_func, arguments, functions, 0)
+                    value_2 = get_var(last_func, arguments, functions, 1)
 
-                    parsed.append(f"op noise {target_var} {value} {value_2}")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op noise {target_var} {value} {value_2}")
 
                 elif call_type == 'absolute':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op abs {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op abs {target_var} {value} 0")
 
                 elif call_type == 'log':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op log {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op log {target_var} {value} 0")
 
                 elif call_type == 'log10':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op log10 {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op log10 {target_var} {value} 0")
 
                 elif call_type == 'random':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op rand {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op rand {target_var} {value} 0")
 
                 elif call_type == 'tan':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op tan {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op tan {target_var} {value} 0")
 
                 elif call_type == 'asin':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op asin {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op asin {target_var} {value} 0")
 
                 elif call_type == 'acos':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op acos {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op acos {target_var} {value} 0")
 
                 elif call_type == 'atan':
-                    target_var = get_target_var(last_func, arguments, functions)
-                    value = get_var(last_func, arguments, functions, 1)
+                    value = get_var(last_func, arguments, functions, 0)
 
-                    parsed.append(f"op atan {target_var} {value} 0")
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f"op atan {target_var} {value} 0")
 
                 elif call_type == 'func_call':
                     # print(functions[func_name]['arguments'])
@@ -670,6 +691,9 @@ def parse(source_code: str) -> list[str]:
                 if not assign_tuple and len(arguments) != 0:
                     assignments = arguments
                     arguments = []
+                    continue
+                elif not assign_tuple and len(arguments) == 0:
+                    assignments.append(previous_word)
                     continue
 
                 assignments.append(word)

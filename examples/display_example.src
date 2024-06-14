@@ -1,6 +1,6 @@
 def main() {
     // Variable retrieval
-    sense(item_amount, container1, totalItems);
+    var item_amount = sense(container1, totalItems);
     var size = item_amount / 4.29;
 
     // Control display

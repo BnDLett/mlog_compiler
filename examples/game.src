@@ -17,10 +17,10 @@ def main() {
         var momentum_y = 0;
 
         // Sensing values.
-        sense(up, switch1, enabled);
-        sense(left, switch2, enabled);
-        sense(down, switch3, enabled);
-        sense(right, switch4, enabled);
+        var up = sense(switch1, enabled);
+        var down = sense(switch2, enabled);
+        var left = sense(switch3, enabled);
+        var right = sense(switch4, enabled);
 
         // momentum
         var momentum_y = momentum_y + up;

@@ -4,7 +4,7 @@ sample_1 = """
 def main() {
     // Variable assignment
     str example_str = "Hello, world!";
-    sense(enabled, switch1, enabled);
+    var enabled = sense(switch1, enabled);
     var not_enabled = !enabled;
     
     // Primary code
@@ -17,7 +17,7 @@ def main() {
     }
     
     // Wait testing. (Don't forget your semi-colons, kids)
-    sense(button_enabled, switch2, enabled);
+    var button_enabled = sense(switch2, enabled);
     var button_not_enabled = !button_enabled;
     
     set_enabled(switch2, button_not_enabled);
@@ -29,8 +29,8 @@ def main() {
 sample_2 = """
 def main() {
     // Variable retrieval
-    sense(reactor_temp, reactor1, heat);
-    sense(reactor_on, switch1, enabled);
+    var reactor_temp = sense(reactor1, heat);
+    var reactor_on = sense(switch1, enabled);
     var not_overheat = reactor_temp < 0.1;
     
     // Primary operation
@@ -42,7 +42,7 @@ def main() {
 sample_3 = """
 def main() {
     // Variable retrieval
-    sense(item_amount, container1, totalItems);
+    var item_amount = sense(container1, totalItems);
     var size = item_amount / 4.29;
     
     // Control display
@@ -62,17 +62,17 @@ sample_4 = """
 def main() {
     // Variable grabbing
     var radius = 10;
-    sense(pos_x, point1, x);
-    sense(pos_y, point1, y);
+    var pos_x = sense(point1, x);
+    var pos_y = sense(point1, y);
     
     unit_radar(unit, player, ally, any, distance, 1);
-    sense(ally_x, unit, x);
-    sense(ally_y, unit, y);
+    var ally_x = sense(unit, x);
+    var ally_y = sense(unit, y);
     
     floor(floored_x, ally_x);
     floor(floored_y, ally_y);
     
-    sense(switch_enabled, switch1, enabled);
+    var switch_enabled = sense(switch1, enabled);
     var not_enabled = !switch_enabled;
     
     var diff_x = floored_x - @thisx;
@@ -139,10 +139,11 @@ def main() {
 sample_7 = """
 def main() {
     var var_x = 9 != 2;
+    var sensed = sense(block1, enabled);
 }
 """
 
-sample_to_run = sample_7
+sample_to_run = sample_1
 
 if __name__ == "__main__":
     result = mlog_compile(sample_to_run)
