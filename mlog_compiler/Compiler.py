@@ -187,7 +187,9 @@ def parse(source_code: str) -> list[str]:
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses, char_index, line)
 
-            if call_type != "" and not "assignment":
+            # Dev vent: it was supposed to be `and not "var"` but it was instead `and not "assignment"`. Somehow, it
+            # didn't cause issues?? Wtf???
+            if call_type != "" and not "var":
                 pass
 
             elif validate(calls):
@@ -687,6 +689,7 @@ def parse(source_code: str) -> list[str]:
                 in_assign_tuple = False
                 current_word = ""
                 in_assignment = True
+                call_type = "var"
 
                 if not assign_tuple and len(arguments) != 0:
                     assignments = arguments
