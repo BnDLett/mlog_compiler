@@ -136,7 +136,13 @@ def main() {
 }
 """
 
-sample_to_run = sample_6
+sample_7 = """
+def main() {
+    var var_x = 9 != 2;
+}
+"""
+
+sample_to_run = sample_7
 
 if __name__ == "__main__":
     result = mlog_compile(sample_to_run)

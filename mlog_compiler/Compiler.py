@@ -173,11 +173,15 @@ def parse(source_code: str) -> list[str]:
             raise MissingEOL()
 
         current_word = ""
+        previous_word = ""
         in_quotes = False
         in_parentheses = False
+        in_assign_tuple = False
+        in_assignment = False
         call_type = ""
         line_split = line.strip().split(" ")
         arguments = []
+        assignments = []
         func_name = ''
 
         for char_index, char in enumerate(line):
@@ -194,21 +198,30 @@ def parse(source_code: str) -> list[str]:
                 func_name = current_word
 
             last_char = line[char_index - 1]
+            try:
+                next_char = line[char_index + 1]
+            except IndexError:
+                next_char = ""
 
             if char == ";":
                 if call_type == 'var':
+                    assignment_split = line.split(" = ")
+                    value_split = assignment_split[1].strip().split(" ")
+                    # var var_x, var_y = 3;
+                    # 0                x 1
+
                     # var_name = f'{last_func}_{line_split[1]}'
-                    var_name = get_target_var(last_func, [line_split[1]], functions)
+                    # var_name = get_target_var(last_func, [line_split[1]], functions)
 
                     # if "not" in line_split:
                     #     # var_data = line_split[index + (offset + 3)]
                     #     var_data = current_word
                     #     parsed.append(f"op notEqual {var_name} {var_data.removesuffix(";")} 1")
                     #     break
-                    if len(line_split) == 6:
-                        var_x = line_split[3]
-                        operation = line_split[4]
-                        var_y = line_split[5].removesuffix(";")
+                    if len(value_split) == 3:
+                        var_x = value_split[0]
+                        operation = value_split[1]
+                        var_y = value_split[2].removesuffix(";")
 
                         var_x = get_target_var(last_func, [var_x], functions)
                         var_y = get_target_var(last_func, [var_y], functions)
@@ -217,21 +230,28 @@ def parse(source_code: str) -> list[str]:
                             print(operation)
                             print(line)
                             raise UnknownOperation
-                        parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
+
+                        for assignment_target in assignments:
+                            var_name = get_target_var(last_func, [assignment_target], functions)
+                            parsed.append(f'op {operations[operation]} {var_name} {var_x} {var_y}')
                         break
 
-                    elif len(line_split) == 4 and line_split[3].startswith("!"):
+                    elif value_split[0].startswith("!"):
                         # var_data = line_split[index + (offset + 3)]
                         var_data = current_word.removeprefix('!').removesuffix(";")
                         var_data = get_target_var(last_func, [var_data], functions)
 
-                        parsed.append(f"op notEqual {var_name} {var_data} 1")
+                        for assignment_target in assignments:
+                            var_name = get_target_var(last_func, [assignment_target], functions)
+                            parsed.append(f"op notEqual {var_name} {var_data} 1")
                         break
 
-                    var_data = get_var(last_func, line_split, functions, 3)
-                    var = Assignment(var_data.removesuffix(";"), var_name)
+                    var_data = get_var(last_func, value_split, functions, 0)
+                    for assignment_target in assignments:
+                        var_name = get_target_var(last_func, [assignment_target], functions)
+                        var = Assignment(var_data.removesuffix(";"), var_name)
 
-                    parsed.append(var.representation)
+                        parsed.append(var.representation)
 
                 elif call_type == 'str':
                     var_name = f'{last_func}_{line_split[1]}'
@@ -616,7 +636,8 @@ def parse(source_code: str) -> list[str]:
                     raise CallDoesNotExist
 
                 break
-            elif char == " " and not in_quotes:
+            elif char == " " and not in_quotes and not in_assign_tuple:
+                previous_word = current_word
                 current_word = ""
                 continue
             elif char in ['"', "'"] and last_char != "\\":
@@ -629,8 +650,30 @@ def parse(source_code: str) -> list[str]:
                 in_parentheses = False
                 arguments.append(current_word)
                 continue
-            elif char == "," and in_parentheses and not in_quotes:
-                arguments.append(current_word)
+            elif char == "," and not in_quotes:
+                word = current_word.removeprefix(",").strip()
+                current_word = ""
+
+                if in_parentheses:
+                    arguments.append(word)
+                    continue
+                in_assign_tuple = True
+                assignments.append(word)
+
+            elif char == "=" and not in_quotes and not in_assignment:
+                assign_tuple = in_assign_tuple
+                word = current_word.removeprefix(",").strip()
+                in_assign_tuple = False
+                current_word = ""
+                in_assignment = True
+
+                if not assign_tuple and len(arguments) != 0:
+                    assignments = arguments
+                    arguments = []
+                    continue
+
+                assignments.append(word)
+
             elif char == "{" and not in_quotes:
                 if call_type == 'def':
                     line_split = line.split(" ")
