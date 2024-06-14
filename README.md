@@ -1,6 +1,10 @@
 # mlog_compiler
 A Python program that compiles a custom language into mlog.
 
+# Note!
+Some functions may require a legacy argument. Each function will specify when a legacy argument is necessary in the
+upcoming documentation.
+
 ## What is a legacy argument?
 A legacy argument is an argument that does not automatically append the function's name at the start of the argument.
 That may require you to manually append the function's name to the start of the argument if necessary.
