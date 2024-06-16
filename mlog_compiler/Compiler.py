@@ -130,6 +130,25 @@ calls = [
     'asin',
     'acos',
     'atan',
+
+    'idle',
+    'stop',
+    'pathfind',
+    'automatic_pathfind',
+    'boost',
+    'target',
+    'targetp',
+    'drop_item',
+    'take_item',
+    'drop_payload',
+    'take_payload',
+    'enter_payload',
+    'mine',
+    'flag',
+    'build',
+    'get_block',
+    'within',
+    'unbind'
 ]
 
 
@@ -640,6 +659,104 @@ def parse(source_code: str) -> list[str]:
                     for assignment in assignments:
                         target_var = get_target_var(last_func, [assignment], functions)
                         parsed.append(f"op atan {target_var} {value} 0")
+
+                elif call_type == 'idle':
+                    parsed.append('ucontrol idle 0 0 0 0 0')
+
+                elif call_type == 'stop':
+                    parsed.append('ucontrol stop 0 0 0 0 0')
+
+                elif call_type == 'pathfind':
+                    pos_x = get_var(last_func, arguments, functions, 0)
+                    pos_y = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f'ucontrol pathfind {pos_x} {pos_y} 0 0 0')
+
+                elif call_type == 'automatic_pathfind':
+                    parsed.append('ucontrol autoPathfind 0 0 0 0 0')
+
+                elif call_type == 'boost':
+                    boost_bool = get_var(last_func, arguments, functions, 0)
+
+                    parsed.append(f'ucontrol boost {boost_bool} 0 0 0 0')
+
+                elif call_type == 'target':
+                    pos_x = get_var(last_func, arguments, functions, 0)
+                    pos_y = get_var(last_func, arguments, functions, 1)
+                    shoot = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f'ucontrol target {pos_x} {pos_y} {shoot} 0 0')
+
+                elif call_type == 'predictive_target':
+                    unit = get_var(last_func, arguments, functions, 0)
+                    shoot = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f'ucontrol targetp {unit} {shoot} 0 0 0')
+
+                elif call_type == 'drop_item':
+                    destination = get_var(last_func, arguments, functions, 0)
+                    amount = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f'ucontrol itemDrop {destination} {amount} 0 0 0')
+
+                elif call_type == 'take_item':
+                    target = get_var(last_func, arguments, functions, 0)
+                    item = get_var(last_func, arguments, functions, 1)
+                    amount = get_var(last_func, arguments, functions, 2)
+
+                    parsed.append(f'ucontrol itemTake {target} {item} {amount} 0 0')
+
+                elif call_type == 'drop_payload':
+                    parsed.append(f'ucontrol payDrop 0 0 0 0 0')
+
+                elif call_type == 'take_payload':
+                    amount = get_var(last_func, arguments, functions, 0)
+
+                    parsed.append(f'ucontrol payTake {amount} 0 0 0 0')
+
+                elif call_type == 'enter_payload':
+                    parsed.append(f'ucontrol payEnter 0 0 0 0 0')
+
+                elif call_type == 'mine':
+                    pos_x = get_var(last_func, arguments, functions, 0)
+                    pos_y = get_var(last_func, arguments, functions, 1)
+
+                    parsed.append(f'ucontrol mine {pos_x} {pos_y} 0 0 0')
+
+                elif call_type == 'flag':
+                    value = get_var(last_func, arguments, functions, 0)
+
+                    parsed.append(f'ucontrol flag {value} 0 0 0 0')
+
+                elif call_type == 'build':
+                    pos_x = get_var(last_func, arguments, functions, 0)
+                    pos_y = get_var(last_func, arguments, functions, 1)
+                    block = get_var(last_func, arguments, functions, 2)
+                    rotation = get_var(last_func, arguments, functions, 3)
+                    config = get_var(last_func, arguments, functions, 4)
+
+                    parsed.append(f'ucontrol build {pos_x} {pos_y} {block} {rotation} {config}')
+
+                elif call_type == 'get_block':
+                    pos_x = get_var(last_func, arguments, functions, 0)
+                    pos_y = get_var(last_func, arguments, functions, 1)
+                    block_type = get_var(last_func, arguments, functions, 2)
+                    building = get_var(last_func, arguments, functions, 3)
+                    floor = get_var(last_func, arguments, functions, 4)
+
+                    parsed.append(f'ucontrol build {pos_x} {pos_y} {block_type} {building} {floor}')
+
+                elif call_type == 'within':
+                    pos_x = get_var(last_func, arguments, functions, 1)
+                    pos_y = get_var(last_func, arguments, functions, 2)
+                    radius = get_var(last_func, arguments, functions, 3)
+
+                    for assignment in assignments:
+                        target_var = get_target_var(last_func, [assignment], functions)
+                        parsed.append(f'ucontrol within {pos_x} {pos_y} {radius} {target_var} 0')
+
+                elif call_type == 'unbind':
+                    parsed.append(f'ucontrol unbind 0 0 0 0 0')
 
                 elif call_type == 'func_call':
                     # print(functions[func_name]['arguments'])
