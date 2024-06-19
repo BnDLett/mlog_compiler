@@ -1,8 +1,10 @@
 from io import TextIOWrapper
+from pathlib import Path
+
 import mlog_compiler
 
 
-def mlog_compile(fi: TextIOWrapper | str = None):
+def mlog_compile(fi: TextIOWrapper | str = None, parent_path: str | Path = ""):
     source = ""
     running = False
 
@@ -24,7 +26,7 @@ def mlog_compile(fi: TextIOWrapper | str = None):
 
         source += f"{result}\n"
 
-    parsed = mlog_compiler.parse(source.removesuffix("\n"))
+    parsed = mlog_compiler.parse(source.removesuffix("\n"), parent_path)
     return parsed
 
 

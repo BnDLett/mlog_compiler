@@ -1,9 +1,10 @@
 import json
 import warnings
+from pathlib import Path
 
 from mlog_compiler import Assignment, Control, Sense, Draw, DrawFlush, UnitRadar
 from mlog_compiler.Blocks import MessageBlock
-from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation
+from mlog_compiler.Exceptions import MissingEOL, CallDoesNotExist, UnknownOperation, InvalidPath
 
 operations = {
     # Comparative
@@ -130,7 +131,6 @@ calls = [
     'asin',
     'acos',
     'atan',
-
     'idle',
     'stop',
     'pathfind',
@@ -148,11 +148,13 @@ calls = [
     'build',
     'get_block',
     'within',
-    'unbind'
+    'unbind',
+    
+    'import',
 ]
 
 
-def parse(source_code: str) -> list[str]:
+def parse(source_code: str, parent_path: Path, expose_funcs: bool = False) -> list[str] | tuple:
     source_code_split = source_code.split("\n")
     parsed = []
     branch_queue = []
@@ -198,13 +200,18 @@ def parse(source_code: str) -> list[str]:
         in_assign_tuple = False
         in_assignment = False
         call_type = ""
-        line_split = line.strip().split(" ")
+        # line_split = line.strip().split(" ")
         arguments = []
         assignments = []
         func_name = ''
 
         for char_index, char in enumerate(line):
             validate = lambda l_call: validate_call(l_call, current_word, in_quotes, in_parentheses, char_index, line)
+            try:
+                next_char = line[char_index + 1]
+            except IndexError:
+                next_char = ""
+            last_char = line[char_index - 1]
 
             # Dev vent: it was supposed to be `and not "var"` but it was instead `and not "assignment"`. Somehow, it
             # didn't cause issues?? Wtf???
@@ -215,10 +222,9 @@ def parse(source_code: str) -> list[str]:
                 call_type = current_word
 
             elif current_word in functions.keys():
-                call_type = 'func_call'
-                func_name = current_word
-
-            last_char = line[char_index - 1]
+                if char != "_":
+                    call_type = 'func_call'
+                    func_name = current_word
 
             if char == ";":
                 if call_type == 'var':
@@ -771,8 +777,28 @@ def parse(source_code: str) -> list[str]:
 
                     parsed.append(full_to_return)
 
+                elif call_type == 'import':
+                    line_split = line.strip().split(" ")
+                    file_to_import = line_split[1].removesuffix(";")
+                    import_path = Path(f"{parent_path.__str__()}/{file_to_import}")
+                    import_parent = import_path.parent
+
+                    if not import_path.exists():
+                        raise InvalidPath
+
+                    with open(import_path, 'r') as fi:
+                        import_content = fi.read()
+                        compiled_import, exposed_funcs = parse(import_content, import_parent, True)
+                        exposed_funcs: dict
+
+                        for instruction in compiled_import:
+                            parsed.append(instruction)
+                        for exposed_func_name in exposed_funcs.keys():
+                            functions[exposed_func_name] = exposed_funcs[exposed_func_name]
+
                 elif call_type == "":
                     print(line)
+                    print(call_type)
                     raise CallDoesNotExist
 
                 break
@@ -929,4 +955,7 @@ def parse(source_code: str) -> list[str]:
         branch_call_queue['while'] -= 1
 
     parsed.append('end')
+    if expose_funcs:
+        return parsed, functions
+
     return parsed

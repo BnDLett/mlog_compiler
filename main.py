@@ -1,4 +1,5 @@
 from io import TextIOWrapper
+from pathlib import Path
 from sys import argv
 from mlog_compiler.RunCompiler import mlog_compile
 
@@ -42,11 +43,13 @@ def main(args: dict[str: str | bool]) -> int:
     if args['file'] == '':
         return 1
 
-    with open(args['file'], 'r') as fi:
+    path = Path(args['file'])
+
+    with open(path, 'r') as fi:
         # For some reason, PyCharm thinks that open() returns TextIO despite the type hint specifying that it will
         # return a TextIOWrapper.
         fi: TextIOWrapper
-        result = mlog_compile(fi)
+        result = mlog_compile(fi, path.parent)
 
     result_str = "\n"
 

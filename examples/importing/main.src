@@ -1,0 +1,6 @@
+import funcs.src;
+
+def main() {
+    add_one(3);
+    print(add_one_ret, 1);
+}

@@ -8,3 +8,7 @@ class UnknownOperation(Exception):
 
 class CallDoesNotExist(TypeError):
     pass
+
+
+class InvalidPath(ImportError):
+    pass
