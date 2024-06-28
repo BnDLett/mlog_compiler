@@ -49,6 +49,9 @@ def validate_call(call: str | list, current_word: str, in_quotes: bool, in_paren
         warnings.warn(message, DeprecationWarning)
         return current_word == call and not in_quotes and not in_parentheses and line[char_index] != "_"
 
+    if line[char_index] not in '( ':
+        return False
+
     return current_word in call and not in_quotes and not in_parentheses
 
 
@@ -216,7 +219,7 @@ def parse(source_code: str, parent_path: Path, expose_funcs: bool = False) -> li
             # Dev vent: it was supposed to be `and not "var"` but it was instead `and not "assignment"`. Somehow, it
             # didn't cause issues?? Wtf???
             # Dev vent part 2: I accidentally wrote `and not "var"` instead of `or call_type == "var"`
-            if call_type != "" or call_type == "var":
+            if call_type != "" and call_type != "var":
                 pass
 
             elif validate(calls):
