@@ -50,7 +50,7 @@ def main() {
         }
 
         // Writing to display
-        clear(0, 0, 0, 1);
+        clear(0, 0, 0);
         rectangle(pos_x, pos_y, size_x, size_y);
         update(1);
 

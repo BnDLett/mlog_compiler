@@ -215,7 +215,8 @@ def parse(source_code: str, parent_path: Path, expose_funcs: bool = False) -> li
 
             # Dev vent: it was supposed to be `and not "var"` but it was instead `and not "assignment"`. Somehow, it
             # didn't cause issues?? Wtf???
-            if call_type != "" and not "var":
+            # Dev vent part 2: I accidentally wrote `and not "var"` instead of `or call_type == "var"`
+            if call_type != "" or call_type == "var":
                 pass
 
             elif validate(calls):
