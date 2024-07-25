@@ -1,32 +1,12 @@
 # mlog_compiler
-A Python program that compiles a custom language into mlog.
+A Python program that compiles a custom-syntax programming language into mlog.
 
 # Note!
-Some functions may require a legacy argument. Each function will specify when a legacy argument is necessary in the
-upcoming documentation.
-
-## What is a legacy argument?
-A legacy argument is an argument that does not automatically append the function's name at the start of the argument.
-That may require you to manually append the function's name to the start of the argument if necessary.
+This version of the compiler is still in a rework stage. Expect *a lot* of breaking changes until this is pushed into
+the master branch. There are also a lot of missing features, so don't expect a lot until this is further polished out.
 
 # What is currently supported?
-The custom language currently supports the following:
-- Print statements
-- Variable assignment
-- Comments
-- Enabling/disabling blocks
-- If statements
-- Sensing data from blocks
-- Wait statements
-- Logical comparative operations
-- Mathematical operations
-- Bitwise comparative operations
-- Drawing on a display
-- Unit binding and (basic) controlling. 
-- Functions
-- And more!
-
-With more planned to come.
+Basic adding. Given that this is a rework that *just* started, there isn't as many features currently. 
 
 # Versioning schemes
 ## Why is a scheme necessary?
@@ -40,10 +20,10 @@ will become `0.15.0` when minor is incremented.
 - A number should only be incremented on per-commit basis. For example, if a commit implements a minor change, then only
 the minor version should be incremented by one. 
 
-## 0.minor.patch
+## 0/1.minor.patch
 ### minor
 A feature was added or a non-significant change was added. For example, a new set of keywords. Although, it should be
-noted that non-backwards-compatible changes can be implemented on this field. If you wish to upgrade the x field, then
+noted that non-backwards-compatible changes can be implemented on this field. If you wish to upgrade the minor field, then
 you should check the history between your current version and the version that you wish to upgrade to in order to ensure
 that a breaking change has not been implemented.
 
@@ -54,13 +34,8 @@ changes to the syntax of the language.
 
 # I need your help.
 ## The situation
-Currently, the language has had little feedback -- the syntax is based only on my personal experience. Not only that,
-but as the language has grown, it has also had less and less debugging ran (only the bare minimum for functions).
+The language is currently in the middle of a rework. There is a lot of missing features that have yet to be implemented.
 ## How you can help
-Providing feedback and reporting bugs in the issues tab would be greatly appreciated. Alongside that, but the language
-has gone unnamed ever since it has begun development. Opening a new discussion with an idea for a name would also be
-greatly appreciated. Although, be practical -- I personally prefer not to have a meme name.
-
-I would prefer if suggestions regarding the structure of compiler's code itself is kept to a minimal. This is entirely a
-learning experience for me and I'd prefer to avoid having the code mangled in ways that can make it harder to develop.
-Although, once I am ready to add changes to the compiler that optimizes development, then I will specify so here.
+The best way that you could help now is to add new keywords into the `Compiler.py` file. As of now, there isn't a
+CONTRIBUTING.md file, so please do keep contributions to a minimum until I take the time to write a guide out and push
+it.
