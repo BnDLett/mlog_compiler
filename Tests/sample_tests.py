@@ -1,8 +1,9 @@
-from mlog_compiler.RunCompiler import mlog_compile
+# from mlog_compiler.RunCompiler import mlog_compile
+import sys
 
 sample_1 = """
 def main() {
-    // Variable assignment
+    // Variable.py assignment
     str example_str = "Hello, world!";
     var enabled = sense(switch1, enabled);
     var not_enabled = !enabled;
@@ -28,7 +29,7 @@ def main() {
 
 sample_2 = """
 def main() {
-    // Variable retrieval
+    // Variable.py retrieval
     var reactor_temp = sense(reactor1, heat);
     var reactor_on = sense(switch1, enabled);
     var not_overheat = reactor_temp < 0.1;
@@ -41,7 +42,7 @@ def main() {
 
 sample_3 = """
 def main() {
-    // Variable retrieval
+    // Variable.py retrieval
     var item_amount = sense(container1, totalItems);
     var size = item_amount / 4.29;
     
@@ -60,7 +61,7 @@ def main() {
 
 sample_4 = """
 def main() {
-    // Variable grabbing
+    // Variable.py grabbing
     var radius = 10;
     var pos_x = sense(point1, x);
     var pos_y = sense(point1, y);
@@ -146,12 +147,15 @@ def main() {
 sample_to_run = sample_1
 
 if __name__ == "__main__":
-    result = mlog_compile(sample_to_run)
+    print("This script is not ready for usage within the current version of this library.")
+    sys.exit(1)
 
-    buffer = ""
-
-    for index, line in enumerate(result):
-        # buffer += f"[{str(index).rjust(3, '0')}] {line}\n"
-        buffer += f"{line}\n"
-
-    print(buffer.removesuffix("\n"))
+    # result = mlog_compile(sample_to_run)
+    #
+    # buffer = ""
+    #
+    # for index, line in enumerate(result):
+    #     # buffer += f"[{str(index).rjust(3, '0')}] {line}\n"
+    #     buffer += f"{line}\n"
+    #
+    # print(buffer.removesuffix("\n"))

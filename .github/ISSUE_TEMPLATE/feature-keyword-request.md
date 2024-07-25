@@ -1,8 +1,8 @@
 ---
-name: Feature/Keyword Request
+name: Feature/Keyword.py Request
 about: Suggest a keyword or feature for the project
 title: "[FR] Your Title"
-labels: enhancement, Keyword/Feature Addition
+labels: enhancement, Keyword.py/Feature Addition
 assignees: ''
 
 ---
