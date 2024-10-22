@@ -6,7 +6,7 @@ This version of the compiler is still in a rework stage. Expect *a lot* of break
 the master branch. There are also a lot of missing features, so don't expect a lot until this is further polished out.
 
 # What is currently supported?
-Basic adding. Given that this is a rework that *just* started, there isn't as many features currently. 
+I'll work on this list later.
 
 # Versioning schemes
 ## Why is a scheme necessary?
@@ -31,11 +31,3 @@ that a breaking change has not been implemented.
 A patch, bug fix, or insignificant change was added. This should never include any non-backwards-compatible
 changes that will affect source code. With that said, you can freely upgrade patch version without worry about breaking
 changes to the syntax of the language.
-
-# I need your help.
-## The situation
-The language is currently in the middle of a rework. There is a lot of missing features that have yet to be implemented.
-## How you can help
-The best way that you could help now is to add new keywords into the `Compiler.py` file. As of now, there isn't a
-CONTRIBUTING.md file, so please do keep contributions to a minimum until I take the time to write a guide out and push
-it.
