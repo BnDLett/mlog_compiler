@@ -1,7 +1,7 @@
 import logging
 from typing import Callable, Any
 
-from Exceptions import NoKeywordFound
+from Exceptions import NoKeywordFound, MissingType
 from Variable import Variable
 from Keyword import Keyword
 from TypeCheck import TypeCheck
@@ -13,6 +13,7 @@ class BaseCompiler:
     last_scope: str = 'global'
     compiled_result: list = []
     variables: dict[str, Variable]
+    variable_types: list[str]
     logger: logging.Logger
 
     def __init__(self, code: str | list) -> None:
@@ -22,6 +23,8 @@ class BaseCompiler:
         self.code = code
         self.keywords = {}
         self.variables = {}
+        self.variable_types = []
+        self.logger = logging.Logger("Mlog Compiler Logger")
 
     # ---- NON-STATIC METHODS ----
     # -- Registering Data/Information --
@@ -59,15 +62,13 @@ class BaseCompiler:
         :param type_check: pass
         :return:
         """
-        # self.keywords[keyword_name] = (func, raw_keyword, parameters)
 
-        # if type_name in self.variables:
-        #     self.logger.warning("The type is already registered in the compiler.")
+        self.variable_types.append(type_name)
 
         @self.register_keyword(type_name, 0, raw_keyword=True)
         def handle_variable(placeholder, line: str, index: int):  # noqa
             processed_line = self.process_variable_line(line, type_name)
-            variable_name = processed_line[0]
+            variable_name = f'{self.last_scope}_{processed_line[0]}'
             variable_data = None
             variable = None
 
@@ -78,7 +79,7 @@ class BaseCompiler:
                 variable = Variable(variable_name, type_name)
                 variable_data = processed_line[2]
             elif len(processed_line) == 5:
-                logging.warning("Comparisons in variables are not yet supported.")
+                self.logger.warning("Comparisons in variables are not yet supported.")
             else:
                 raise Exception(f"Line {index + 1} does not properly assign a variable. Ensure that you're not doing a"
                                 f" comparison.")
@@ -88,11 +89,28 @@ class BaseCompiler:
                                 f"that the data that was assigned is a(n) {type_name}.")
 
             self.variables[variable.name] = variable
-            return f"set {variable.name} {variable_data if not variable_data is None else 'null'}"
+            return f"set {variable.name} {variable_data if variable_data is not None else 'null'}"
 
         return handle_variable
 
     # -- General Methods --
+
+    def create_variable(self, variable_name: str, variable_data: str | None, variable_type: str):
+        """
+        Creates and stores a variable at a specified line index.
+        :param variable_name: The name of the variable.
+        :param variable_data: The data that is contained with the variable. If it is `None`, then the data will be
+        'null' in mlog.
+        :param variable_type: The type that the variable is.
+        """
+        if variable_data is None:
+            variable_data = "null"
+
+        if variable_type not in self.variable_types:
+            raise MissingType("The type that was specified does not exist. Ensure that it exists.")
+
+        self.variables[variable_name] = Variable(variable_name, variable_data)
+        self.compiled_result.append(f"set {variable_name} {variable_data}")
 
     def retrieve_variable(self, variable_name: str) -> Variable | None:
         if not (variable_name in self.variables):
@@ -117,10 +135,22 @@ class BaseCompiler:
             self.compiled_result.append(result)
             return
 
-        tuple_in_line = self.parse_tuples_in_line(line, index)
-        for item in tuple_in_line:
-            if not ((TypeCheck.ensure_float(item) or TypeCheck.ensure_str(item)) or item in self.variables.keys()):
+        parsed_tuple_data = self.parse_tuples_in_line(line, index)
+        tuple_in_line = []
+        for item in parsed_tuple_data:
+            expected_var = f'{self.last_scope}_{item}'
+
+            if not ((TypeCheck.ensure_float(item) or TypeCheck.ensure_str(item)) or
+                    expected_var in self.variables.keys()):
                 raise NameError(f"Value {item} on line {index + 1} does not exist.")
+
+            if expected_var in self.variables.keys():
+                tuple_in_line.append(expected_var)
+                continue
+
+            tuple_in_line.append(item)
+
+        # print(tuple_in_line)
 
         length_difference = len(tuple_in_line) - keyword.expected_arguments
         if length_difference > 0:
@@ -157,19 +187,35 @@ class BaseCompiler:
         current_word: str = ""
         # previous_word: str = ""
         current_variables: list = []
+        quotes = ['"', "'"]
         in_tuple: bool = False
+        quote_char_used: str = ''
 
         for index, char in enumerate(line):
-            if char == '(':
+            # if quote_char_used != '':
+            #     current_word += char
+            #     continue
+
+            if char in ['"', "'"] and quote_char_used == '':
+                quote_char_used = char
+                current_word += char
+                continue
+
+            elif char in quotes and quote_char_used == char:
+                quote_char_used = ''
+                current_word += char
+                continue
+
+            elif char == '(':
                 in_tuple = True
                 continue
 
-            elif char == ',':
+            elif char == ',' and quote_char_used == '':
                 current_variables.append(current_word)
                 current_word = ""
                 continue
 
-            elif char == ' ':
+            elif char == ' ' and quote_char_used == '':
                 continue
 
             elif (index == len(line)) and in_tuple:
@@ -227,9 +273,11 @@ if __name__ == "__main__":
     ]
     compiler = BaseCompiler(test_code)
 
+
     @compiler.register_keyword(keyword_name='test', parameters=2, raw_keyword=False)
     def test(self, arguments: tuple):
         return f'op add x {arguments[0]} {arguments[1]}'
+
 
     print(compiler.keywords)
     compiler.compile_line(0)

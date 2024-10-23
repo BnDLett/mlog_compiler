@@ -12,3 +12,7 @@ class CallDoesNotExist(TypeError):
 
 class InvalidPath(ImportError):
     pass
+
+
+class MissingType(TypeError):
+    pass
