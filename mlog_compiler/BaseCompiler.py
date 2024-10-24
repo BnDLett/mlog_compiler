@@ -1,3 +1,27 @@
+"""
+Notes included for ProjectSTEM assignment.
+
+This was built on top of the base of https://github.com/BnDLett/mlog_compiler/tree/master. However, a lot of the code
+that was there isn't here anymore. The only parts from it that do remain are these files:
+- Exceptions.py
+- RunCompiler.py
+- LICENSE
+- main.py
+- setup.py
+- README.md
+- sample_tests.py
+
+The only files from there that are in active use for this are:
+- Exceptions.py
+- LICENSE
+- setup.py
+- README.md
+
+Everything else isn't designed for usage in this version. I believe it should also be noted that the code in
+https://github.com/BnDLett/mlog_compiler/tree/master is mine.
+"""
+
+
 import logging
 from typing import Callable, Any
 
@@ -10,28 +34,51 @@ from TypeCheck import TypeCheck
 class BaseCompiler:
     code: list[str]
     keywords: dict[str, Keyword]
-    last_scope: str = 'global'
-    compiled_result: list = []
+    unlinked_result: list = []  # It's called "unlinked" because scopes aren't yet linked together.
+
+    scopes = set[str]  # names of the registered scopes
+    scope_depth: list[str]  # names of the scopes (including duplicates)
+    scope_starts: list[int]  # the lines where the scopes start at. In relation to scope_depths.
+
     variables: dict[str, Variable]
     variable_types: list[str]
+
     logger: logging.Logger
+    # last_scope: str
 
     def __init__(self, code: str | list) -> None:
         if type(code) is str:
-            code: list = code.split(';')
+            code: list = code.replace("\n", "").split(';')
 
         self.code = code
         self.keywords = {}
+
+        self.scopes = []
+        self.scope_depth = ['global']
+        self.scope_starts = [0]
+
         self.variables = {}
         self.variable_types = []
+
         self.logger = logging.Logger("Mlog Compiler Logger")
+        # self.last_scope = self.scope_depth[-1]
+
+        # @self.register_keyword('{', 0, raw_keyword=True)
+        # def close_scope(this: BaseCompiler, line: str, index: int) -> str:
+        #     pass
+
+        # @self.register_keyword(keyword_name='}', parameters=0, raw_keyword=True)
+        # def close_scope(this: BaseCompiler, line: str, index: int) -> str:
+        #     return f"END---{this.scope_depth.pop()}---{this.scope_starts.pop()}"
+
+        print(self.keywords)
 
     # ---- NON-STATIC METHODS ----
     # -- Registering Data/Information --
 
     def register_keyword(self, keyword_name: str, parameters: int, *, raw_keyword: bool = False):
         """
-        Register a new keyword into the compiler. Whenever your keyword is ran, it will be given `self` and the
+        Register a new keyword into the compiler. Whenever your keyword is run, it will be given `self` and the
         arguments in the line as parameters. Your function's parameter list should look like this: `(self, arguments)`.
         If your keyword is set as a raw keyword, then it will only be given the line itself instead for any special
         behavior.
@@ -66,9 +113,9 @@ class BaseCompiler:
         self.variable_types.append(type_name)
 
         @self.register_keyword(type_name, 0, raw_keyword=True)
-        def handle_variable(placeholder, line: str, index: int):  # noqa
+        def handle_variable(this: BaseCompiler, line: str, index: int):  # noqa
             processed_line = self.process_variable_line(line, type_name)
-            variable_name = f'{self.last_scope}_{processed_line[0]}'
+            variable_name = f'{self.scope_depth[-1]}_{processed_line[0]}'
             variable_data = None
             variable = None
 
@@ -93,6 +140,32 @@ class BaseCompiler:
 
         return handle_variable
 
+    # def register_scope_type(self, scope_name: str, loop: bool, expected_parameters: int):
+    #     """
+    #     Registers a scope into the compiler. For example: an if statement.
+    #     # :param func:
+    #     :param scope_name:
+    #     :param loop:
+    #     :param expected_parameters:
+    #     :return:
+    #     """
+    #     self.scopes.append(scope_name)
+    #
+    #     @self.register_keyword(scope_name, 0, raw_keyword=True)
+    #     def handle_block(this: BaseCompiler, line: str, index: int) -> str:
+    #         # if (trol >= moai) {
+    #         #     // do stuff
+    #         # }
+    #
+    #         # if---0---trol___>=___moai
+    #
+    #         parameters = this.parse_tuples_in_line(line, index)
+    #
+    #         self.scope_depth.append(scope_name)
+    #         self.scope_starts.append(index)
+    #
+    #         return f"START---{scope_name}---{index}---{'___'.join(parameters)}"
+
     # -- General Methods --
 
     def create_variable(self, variable_name: str, variable_data: str | None, variable_type: str):
@@ -110,13 +183,13 @@ class BaseCompiler:
             raise MissingType("The type that was specified does not exist. Ensure that it exists.")
 
         self.variables[variable_name] = Variable(variable_name, variable_data)
-        self.compiled_result.append(f"set {variable_name} {variable_data}")
+        self.unlinked_result.append(f"set {variable_name} {variable_data}")
 
-    def retrieve_variable(self, variable_name: str) -> Variable | None:
-        if not (variable_name in self.variables):
-            return None
-
-        return self.variables[variable_name]
+    # def retrieve_variable(self, variable_name: str) -> Variable | None:
+    #     if not (variable_name in self.variables):
+    #         return None
+    #
+    #     return self.variables[variable_name]
 
     def compile_line(self, index: int):
         """
@@ -124,7 +197,7 @@ class BaseCompiler:
         :param index: The index of the line in the list.
         """
         line: str = self.code[index]
-        if line.strip().startswith("//"):
+        if line.strip().startswith("//") or line.strip() == '':
             return
 
         keyword_name = self.find_keyword_in_line(line, index)
@@ -132,13 +205,13 @@ class BaseCompiler:
 
         if keyword.raw:
             result = keyword.callback(self, line, index)
-            self.compiled_result.append(result)
+            self.unlinked_result.append(result)
             return
 
         parsed_tuple_data = self.parse_tuples_in_line(line, index)
         tuple_in_line = []
         for item in parsed_tuple_data:
-            expected_var = f'{self.last_scope}_{item}'
+            expected_var = f'{self.scope_depth[-1]}_{item}'
 
             if not ((TypeCheck.ensure_float(item) or TypeCheck.ensure_str(item)) or
                     expected_var in self.variables.keys()):
@@ -161,7 +234,7 @@ class BaseCompiler:
                             f" what was expected.")
 
         result = keyword.callback(self, tuple_in_line, index)
-        self.compiled_result.append(result)
+        self.unlinked_result.append(result)
 
     def find_keyword_in_line(self, line: str, line_index: int) -> str:
         current_word: str = ""
@@ -179,6 +252,10 @@ class BaseCompiler:
         raise NoKeywordFound(f"Could not find a keyword on line {line_index + 1}.\n"
                              f"\t{line}\n"
                              f"Ensure that you've properly spelled the keyword.")
+
+    def compile_all(self) -> None:
+        for index, line in enumerate(self.code):
+            self.compile_line(index)
 
     # ---- STATIC METHODS ----
 
@@ -281,4 +358,4 @@ if __name__ == "__main__":
 
     print(compiler.keywords)
     compiler.compile_line(0)
-    print(compiler.compiled_result)
+    print(compiler.unlinked_result)

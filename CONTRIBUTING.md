@@ -1,8 +1,7 @@
 # Contribution Guidelines
 ## NOTE
-This is currently being used for a school project. It is HIGHLY preferred that contributions are kept to a minimum until
-I've submitted the assignment. I will be sure to state when the assignment has been submitted. Until then, any pull
-requests will be ignored. (I'm not trying to be mean, I'm just trying to not get an F for "unauthorized contributions.")
+This is currently being used for a school project. Furthermore, given a mistake (and the fact that I'm unwilling to fix
+it), I'll just be submitting this project straight in. It'll fulfill all the requirements
 
 ## Modifying/Contributing As A Whole
 - Separate your code into sections -- this is mostly just to ensure that everything is organized and not all over the
@@ -37,6 +36,16 @@ while True:
         break
 
     print("Foo")
+```
+- Ensure that a variable is initialized in the class before it is assigned in the `__init__` method. For example:
+```python
+class Foo:
+    x: int  # Initializing the variables in the class first
+    y: int
+    
+    def __init__(self, x: int, y: int) -> None:
+        self.x = x  # Then assigning them a value
+        self.y = y
 ```
 
 ## Paradigms
