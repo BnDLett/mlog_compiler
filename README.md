@@ -2,21 +2,9 @@
 A Python program that compiles a custom-syntax programming language into mlog.
 
 # Note!
-## The Present Situation
-Even though this branch says "oop_version," that doesn't mean that this version of the compiler supports the OOP
-paradigm in the language. It just means that the compiler itself was written in OOP. I'd also highly advise against
-using this version of the compiler as there are mistakes that I am not willing to go back and fix. As such, you're going
-to have some issues with using this version. Especially given the lack of proper scopes (there is functionality in the
-works for it; however, that functionality is not completed, and it likely won't be.)
-## The future goal
-The future goal as of now is to do something similar to this, but with a *lexer* and an *AST*. I'll likely do that in 
-Java, which is an OOP language. Given that, it should work *extremely* well for my use case. Although, currently, this
-lacks a proper lexer and AST. Therefore, it isn't on the same caliber as other compilers would be. I may also do Rust,
-which would be great for a functional version of this compiler. Although, given the way that Rust is in terms of its
-learning curve, it could be a no-go.
-
-# What is currently supported?
-Basic keywords and typing.
+This is just me experimenting with abstract syntax trees and lexers to get a feel for them. I cannot guarantee that
+this version will be the version that I go with. As such, don't expect regular updates or stability either. *(However,
+I am not saying that I won't develop this further -- just that there is a possibility that I won't)*
 
 # Versioning schemes
 ## Why is a scheme necessary?

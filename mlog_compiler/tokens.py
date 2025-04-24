@@ -1,0 +1,124 @@
+from __future__ import annotations
+import typing
+
+from mlog_compiler.library import BuiltinFunctions
+from mlog_compiler.utils import get_nested_classes
+
+
+class Token:
+    lexeme: str = ''
+    literal: typing.Any = None
+    next_tokens = []
+    line: int
+    column: int
+
+    def __init__(self, line: int, column: int, next_tokens: list[Token] | None = None):
+        if next_tokens is None:
+            next_tokens = []
+
+        self.line = line
+        self.column = column
+        self.next_tokens = next_tokens
+
+
+class TokenType:
+    """
+    A type of token. Such as keywords and punctuations.
+    """
+    tokens: [str, Token]
+
+
+class Punctuation(TokenType):
+    class LeftParentheses(Token):
+        lexeme = "("
+
+    class RightParentheses(Token):
+        lexeme = ")"
+
+    class LeftCurlyBracket(Token):
+        lexeme = "{"
+
+    class RightCurlyBracket(Token):
+        lexeme = "}"
+
+    class LeftSquareBracket(Token):
+        lexeme = "["
+
+    class RightSquareBracket(Token):
+        lexeme = "]"
+
+    class Colon(Token):
+        lexeme = ":"
+
+    class Semicolon(Token):
+        lexeme = ";"
+
+    class Assign(Token):
+        lexeme = "="
+
+    class Comma(Token):
+        lexeme = ","
+
+
+class Keyword(TokenType):
+    class TrueConstant(Token):
+        lexeme = 'true'
+
+    class FalseConstant(Token):
+        lexeme = 'false'
+
+    class Print(Token):
+        lexeme = "print"
+        literal = BuiltinFunctions.Print
+
+
+class Type(TokenType):
+    class Int(Token):
+        lexeme = 'int'
+
+    class Float(Token):
+        lexeme = 'float'
+
+    class String(Token):
+        lexeme = 'string'
+
+    class Boolean(Token):
+        lexeme = "bool"
+
+
+class Misc(TokenType):
+    class Identifier(Token):
+        def __init__(self, line: int, column: int, lexeme: str, next_tokens: list[Token] | None = None):
+            super().__init__(line, column, next_tokens)
+
+            self.lexeme = lexeme
+
+    class Constant(Token):
+        def __init__(self, line: int, column: int, lexeme: str, next_tokens: list[Token] | None = None):
+            super().__init__(line, column, next_tokens)
+
+            self.lexeme = lexeme
+
+
+def update_token_dict():
+    """
+    Updates the token dictionary of **all** TokenType subclasses.
+    """
+
+    for token_type in TokenType.__subclasses__():
+        token_type.tokens = {}
+
+        classes = get_nested_classes(token_type, Token)
+
+        for cls in classes:
+            if cls.lexeme == '':
+                continue
+
+            token_type.tokens[cls.lexeme] = cls
+
+
+update_token_dict()
+if __name__ == '__main__':
+    print(Punctuation.tokens)
+    print(Keyword.tokens)
+    print(Misc.tokens)
