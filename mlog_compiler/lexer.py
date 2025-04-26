@@ -1,6 +1,6 @@
-from mlog_compiler.tokens import Token, Keyword, Misc, TokenType
+from mlog_compiler.tokens import Token, Misc, TokenType
 from mlog_compiler.tokens import Punctuation
-from mlog_compiler.utils import get_nested_classes, is_number
+from mlog_compiler.utils import is_number
 
 
 def peek(current_index: int, source_code: str) -> str:
@@ -15,11 +15,15 @@ def peek(current_index: int, source_code: str) -> str:
     return source_code[next_index]
 
 def lex(source: str):
+    """
+    Lexes source code into a list of tokens.
+    """
     current_word = ''
     lexed_tokens: list[Token] = []
     line = 1
     last_index = 0
     in_quotes = False
+    in_comment = False
 
     for index, char in enumerate(source):
         if char == " " and not in_quotes:
@@ -36,7 +40,19 @@ def lex(source: str):
             in_quotes = not in_quotes
             continue
 
-        if in_quotes:
+        elif char == "/" and peek(index, source) == "/":
+            in_comment = True
+
+        elif char == "\n":
+            if in_comment:
+                in_comment = False
+
+            last_index = index + 1
+            line += 1
+            current_word = ''
+            continue
+
+        if in_quotes or in_comment:
             continue
 
         if char in Punctuation.tokens.keys():
@@ -66,18 +82,25 @@ def lex(source: str):
 
             current_word = ''
 
-        if char == "\n":
-            last_index = index
-            line += 1
-            current_word = ''
-            continue
+    # print([x.__class__.__name__ for x in lexed_tokens])
+    # print([x.lexeme for x in lexed_tokens])
+    # print([(x.line, x.column) for x in lexed_tokens])
+    return lexed_tokens
 
-    print([x.__class__.__name__ for x in lexed_tokens])
-    print([x.lexeme for x in lexed_tokens])
-    print([(x.line, x.column) for x in lexed_tokens])
 
+example_source = """print("Hello, world");
+if (true) {
+    print(\"lorem ipsum\", 6);
+    bool x = false;
+    // hello, world!
+    float y = 3.14159;
+}
+"""
 
 if __name__ == '__main__':
-    example_source = "print(\"lorem ipsum\", 6);\nbool x = false;"
     print(example_source)
-    lex(example_source)
+    result = lex(example_source)
+
+    print([x.lexeme for x in result])
+    print([x.__class__.__name__ for x in result])
+    print([(x.line, x.column) for x in result])

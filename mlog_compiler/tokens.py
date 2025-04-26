@@ -53,9 +53,6 @@ class Punctuation(TokenType):
     class Semicolon(Token):
         lexeme = ";"
 
-    class Assign(Token):
-        lexeme = "="
-
     class Comma(Token):
         lexeme = ","
 
@@ -70,6 +67,10 @@ class Keyword(TokenType):
     class Print(Token):
         lexeme = "print"
         literal = BuiltinFunctions.Print
+
+    class If(Token):
+        lexeme = "if"
+        literal = None
 
 
 class Type(TokenType):
@@ -86,6 +87,23 @@ class Type(TokenType):
         lexeme = "bool"
 
 
+class Arithmetic(TokenType):
+    class Assign(Token):
+        lexeme = "="
+
+    class Add(Token):
+        lexeme = "+"
+
+    class Subtract(Token):
+        lexeme = "-"
+
+    class Multiply(Token):
+        lexeme = "*"
+
+    class Divide(Token):
+        lexeme = "/"
+
+
 class Misc(TokenType):
     class Identifier(Token):
         def __init__(self, line: int, column: int, lexeme: str, next_tokens: list[Token] | None = None):
@@ -98,6 +116,9 @@ class Misc(TokenType):
             super().__init__(line, column, next_tokens)
 
             self.lexeme = lexeme
+
+    class Program(Token):
+        pass
 
 
 def update_token_dict():
