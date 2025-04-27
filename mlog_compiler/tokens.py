@@ -11,6 +11,8 @@ class Token:
     next_tokens = []
     line: int
     column: int
+    # Whether you can reference the token/keyword/whatever in the source code.
+    not_referencable = False
 
     def __init__(self, line: int, column: int, next_tokens: list[Token] | None = None):
         if next_tokens is None:
@@ -57,13 +59,15 @@ class Punctuation(TokenType):
         lexeme = ","
 
 
-class Keyword(TokenType):
+class Constant(TokenType):
     class TrueConstant(Token):
         lexeme = 'true'
 
     class FalseConstant(Token):
         lexeme = 'false'
 
+
+class Keyword(TokenType):
     class Print(Token):
         lexeme = "print"
         literal = BuiltinFunctions.Print
@@ -118,7 +122,12 @@ class Misc(TokenType):
             self.lexeme = lexeme
 
     class Program(Token):
-        pass
+        lexeme = "PROGRAM"
+        not_referencable = True
+
+    class Block(Token):
+        lexeme = "CODE_BLOCK"
+        not_referencable = True
 
 
 def update_token_dict():

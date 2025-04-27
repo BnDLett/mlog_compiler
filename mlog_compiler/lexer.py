@@ -67,8 +67,13 @@ def lex(source: str):
                 if current_word not in token_type.tokens:
                     continue
 
+                token = token_type.tokens[current_word](line, relative_char_index)
+
+                if token.not_referencable:
+                    continue
+
                 found_token = True
-                lexed_tokens.append(token_type.tokens[current_word](line, relative_char_index))
+                lexed_tokens.append(token)
 
             if not found_token:
                 if is_number(current_word):
