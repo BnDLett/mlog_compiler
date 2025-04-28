@@ -1,4 +1,4 @@
-from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword
+from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword, Type
 from mlog_compiler.lexer import lex, example_source
 from mlog_compiler.utils import get_nested_classes
 
@@ -7,6 +7,7 @@ def parse_tokens(token_list: list[Token]):
     ast = Misc.Program(0, 0)
     token_depth: list[Token] = [ast]
     last_keyword: Token | None = None
+    variables: list[str]
 
     # TODO: assign into its own node and ignore semi-colons.
     # TODO: errors and syntax checking.
@@ -18,8 +19,6 @@ def parse_tokens(token_list: list[Token]):
             block_token = Misc.Block(last_keyword.line, last_keyword.column)
             last_keyword.next_tokens.append(block_token)
             token_depth.append(block_token)
-            # last_keyword.next_tokens.append(token)
-            # token_depth.append(token)
             continue
 
         elif isinstance(token, Punctuation.LeftParentheses):
@@ -29,6 +28,13 @@ def parse_tokens(token_list: list[Token]):
         elif isinstance(token, Punctuation.RightParentheses) or isinstance(token, Punctuation.RightCurlyBracket):
             token_depth.pop()
             continue
+
+        elif token.__class__ in get_nested_classes(Type, Token):
+            variable_token = Misc.Variable(token.line, token.column)
+            token_depth.append(variable_token)
+            # float x = 3.14159;
+
+        # elif
 
         token_depth[-1].next_tokens.append(token)
 

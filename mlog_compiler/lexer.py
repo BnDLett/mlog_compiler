@@ -82,18 +82,13 @@ def lex(source: str):
 
                 lexed_tokens.append(Misc.Identifier(line, relative_char_index, current_word))
 
-            # else:
-            #     lexed_tokens.append(Misc.Identifier(line, relative_char_index, current_word))
-
             current_word = ''
 
-    # print([x.__class__.__name__ for x in lexed_tokens])
-    # print([x.lexeme for x in lexed_tokens])
-    # print([(x.line, x.column) for x in lexed_tokens])
     return lexed_tokens
 
 
 example_source = """print("Hello, world");
+// print("// This is not a comment");
 if (true) {
     print(\"lorem ipsum\", 6);
     bool x = false;

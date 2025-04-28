@@ -129,6 +129,14 @@ class Misc(TokenType):
         lexeme = "CODE_BLOCK"
         not_referencable = True
 
+    class Variable(Token):
+        lexeme = "VARIABLE"
+        not_referencable = True
+
+    class Reassignment(Token):
+        lexeme = "REASSIGNMENT"
+        not_referencable = True
+
 
 def update_token_dict():
     """
