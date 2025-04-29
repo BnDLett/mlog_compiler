@@ -1,18 +1,7 @@
 from mlog_compiler.tokens import Token, Misc, TokenType
 from mlog_compiler.tokens import Punctuation
-from mlog_compiler.utils import is_number
+from mlog_compiler.utils import is_number, peek
 
-
-def peek(current_index: int, source_code: str) -> str:
-    """
-    Peeks at the next character in the sequence.
-    """
-    next_index = current_index + 1
-
-    if next_index >= len(source_code):
-        return ''
-
-    return source_code[next_index]
 
 def lex(source: str):
     """
@@ -33,7 +22,7 @@ def lex(source: str):
         relative_char_index = (index - last_index) + 1
         current_word += char
 
-        if char == '"' or char == "'":
+        if (char == '"' or char == "'") and not in_comment:
             if in_quotes:
                 lexed_tokens.append(Misc.Constant(line, relative_char_index, current_word))
 
@@ -87,13 +76,21 @@ def lex(source: str):
     return lexed_tokens
 
 
-example_source = """print("Hello, world");
-// print("// This is not a comment");
+example_source = """printf("Hello, world", 1);
+// printf("// This is not a comment");
+// x;
+
 if (true) {
-    print(\"lorem ipsum\", 6);
+    if (true) {
+        printf("moai", 3);
+    }
+
+    printf(\"lorem ipsum\", 6);
     bool x = false;
     // hello, world!
-    float y = 3.14159;
+    
+    float y = 3.14159 * 2;
+    float z = 3 + (y * y) + 2;
 }
 """
 

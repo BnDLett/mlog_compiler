@@ -1,13 +1,16 @@
-from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword, Type
+from mlog_compiler.error_handler import UndefinedVariable, CError, UnbalancedBrackets
+from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword, Type, Arithmetic, Constant
 from mlog_compiler.lexer import lex, example_source
-from mlog_compiler.utils import get_nested_classes
+from mlog_compiler.utils import get_nested_classes, is_number
 
 
-def parse_tokens(token_list: list[Token]):
+def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
     ast = Misc.Program(0, 0)
     token_depth: list[Token] = [ast]
     last_keyword: Token | None = None
-    variables: list[str]
+    last_type: Token | None = None
+    variables: list[str] = []
+    line_depth: int = 0
 
     # TODO: assign into its own node and ignore semi-colons.
     # TODO: errors and syntax checking.
@@ -16,7 +19,7 @@ def parse_tokens(token_list: list[Token]):
             last_keyword = token
 
         elif isinstance(token, Punctuation.LeftCurlyBracket):
-            block_token = Misc.Block(last_keyword.line, last_keyword.column)
+            block_token = Misc.Block(token.line, token.column)
             last_keyword.next_tokens.append(block_token)
             token_depth.append(block_token)
             continue
@@ -26,17 +29,52 @@ def parse_tokens(token_list: list[Token]):
             continue
 
         elif isinstance(token, Punctuation.RightParentheses) or isinstance(token, Punctuation.RightCurlyBracket):
+            if len(token_depth) <= 1:
+                return UnbalancedBrackets(token, "Make sure you're not closing a non-existing code "
+                                                 "block.")
+
             token_depth.pop()
             continue
 
         elif token.__class__ in get_nested_classes(Type, Token):
-            variable_token = Misc.Variable(token.line, token.column)
-            token_depth.append(variable_token)
-            # float x = 3.14159;
+            last_type = token
+            continue
+            # float x = 3.14159 + 1;
 
-        # elif
+        elif token.__class__ in get_nested_classes(Arithmetic, Token):
+            variable = token_depth[-1].next_tokens.pop()
+
+            if not is_number(variable.lexeme):
+                variables.append(variable.lexeme)
+
+            token_depth[-1].next_tokens.append(token)
+            token.next_tokens.append(token_list[index - 1])
+            token_depth.append(token)
+            line_depth += 1
+
+            continue
+
+        elif isinstance(token, Punctuation.Semicolon):
+            last_type = None
+
+            for _ in range(line_depth):
+                token_depth.pop()
+
+            line_depth = 0
+            continue
+
+        elif isinstance(token, Punctuation.Comma):
+            # I don't intend on making the commas a requirement in the grammar.
+            continue
+
+        elif isinstance(token, Misc.Identifier):
+            if (token.lexeme not in variables) and (token_list[index - 1].__class__ not in get_nested_classes(Type, Token)):
+                return UndefinedVariable(token, "Make sure you've initialized the variable.")
 
         token_depth[-1].next_tokens.append(token)
+
+    if len(token_depth) != 1:
+        return UnbalancedBrackets(token_depth[-1], "Make sure the brackets for this code block are closed.")
 
     return ast
 
@@ -61,4 +99,9 @@ if __name__ == '__main__':
     result = lex(example_source)
     print(example_source)
     ast = parse_tokens(result)
+
+    if isinstance(ast, CError):
+        print(ast)
+        exit(1)
+
     print_tree(ast)

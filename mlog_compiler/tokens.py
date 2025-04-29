@@ -69,8 +69,8 @@ class Constant(TokenType):
 
 class Keyword(TokenType):
     class Print(Token):
-        lexeme = "print"
-        literal = BuiltinFunctions.Print
+        lexeme = "printf"
+        literal = BuiltinFunctions.Printf
 
     class If(Token):
         lexeme = "if"

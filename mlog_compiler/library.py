@@ -12,7 +12,7 @@ class BuiltinFunction(ABC):
 
 # TODO: Name this better
 class BuiltinFunctions:
-    class Print(BuiltinFunction):
+    class Printf(BuiltinFunction):
         arguments = (str, int)
 
         def get_representation(self, arguments: list[str, int]) -> tuple[str, str]:
