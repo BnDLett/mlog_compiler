@@ -2,7 +2,6 @@ from __future__ import annotations
 import typing
 
 from mlog_compiler.library import BuiltinFunctions
-from mlog_compiler.utils import get_nested_classes
 
 
 class Token:
@@ -116,10 +115,14 @@ class Misc(TokenType):
             self.lexeme = lexeme
 
     class Constant(Token):
-        def __init__(self, line: int, column: int, lexeme: str, next_tokens: list[Token] | None = None):
+        constant_type: Token
+
+        def __init__(self, line: int, column: int, lexeme: str, constant_type: Token,
+                     next_tokens: list[Token] | None = None):
             super().__init__(line, column, next_tokens)
 
             self.lexeme = lexeme
+            self.constant_type = constant_type
 
     class Program(Token):
         lexeme = "PROGRAM"
@@ -138,24 +141,6 @@ class Misc(TokenType):
         not_referencable = True
 
 
-def update_token_dict():
-    """
-    Updates the token dictionary of **all** TokenType subclasses.
-    """
-
-    for token_type in TokenType.__subclasses__():
-        token_type.tokens = {}
-
-        classes = get_nested_classes(token_type, Token)
-
-        for cls in classes:
-            if cls.lexeme == '':
-                continue
-
-            token_type.tokens[cls.lexeme] = cls
-
-
-update_token_dict()
 if __name__ == '__main__':
     print(Punctuation.tokens)
     print(Keyword.tokens)

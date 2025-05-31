@@ -1,6 +1,8 @@
-from mlog_compiler.tokens import Token, Misc, TokenType
+from http.cookiejar import cut_port_re
+
+from mlog_compiler.tokens import Token, Misc, TokenType, Type
 from mlog_compiler.tokens import Punctuation
-from mlog_compiler.utils import is_number, peek
+from mlog_compiler.utils import is_number, peek, get_number_type
 
 
 def lex(source: str):
@@ -24,7 +26,7 @@ def lex(source: str):
 
         if (char == '"' or char == "'") and not in_comment:
             if in_quotes:
-                lexed_tokens.append(Misc.Constant(line, relative_char_index, current_word))
+                lexed_tokens.append(Misc.Constant(line, relative_char_index, current_word, Type.String))
 
             in_quotes = not in_quotes
             continue
@@ -66,7 +68,8 @@ def lex(source: str):
 
             if not found_token:
                 if is_number(current_word):
-                    lexed_tokens.append(Misc.Constant(line, relative_char_index, current_word))
+                    number_type = get_number_type(current_word)
+                    lexed_tokens.append(Misc.Constant(line, relative_char_index, current_word, number_type))
                     continue
 
                 lexed_tokens.append(Misc.Identifier(line, relative_char_index, current_word))
@@ -89,8 +92,8 @@ if (true) {
     bool x = false;
     // hello, world!
     
-    float y = 3.14159 * 2;
-    float z = 3 + (y * y) + 2;
+    float y = 3.14159 * 2.;
+    float z = 3 + y * y + 2;
 }
 """
 

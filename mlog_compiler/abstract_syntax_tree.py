@@ -1,7 +1,8 @@
-from mlog_compiler.error_handler import UndefinedVariable, CError, UnbalancedBrackets
-from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword, Type, Arithmetic, Constant
+from mlog_compiler.error_handler import UndefinedVariable, CError, UnbalancedBrackets, CTypeError
+from mlog_compiler.tokens import Token, Punctuation, Misc, Keyword, Type as CType, Arithmetic, Constant
 from mlog_compiler.lexer import lex, example_source
-from mlog_compiler.utils import get_nested_classes, is_number
+from mlog_compiler.utils import get_nested_classes, is_number, peek
+from typing import Type
 
 
 def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
@@ -9,12 +10,13 @@ def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
     token_depth: list[Token] = [ast]
     last_keyword: Token | None = None
     last_type: Token | None = None
-    variables: list[str] = []
+    variables: dict[str, Type[Token]] = {}
     line_depth: int = 0
 
-    # TODO: assign into its own node and ignore semi-colons.
     # TODO: errors and syntax checking.
     for index, token in enumerate(token_list):
+        # print(token)
+
         if token.__class__ in get_nested_classes(Keyword, Token):
             last_keyword = token
 
@@ -36,7 +38,7 @@ def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
             token_depth.pop()
             continue
 
-        elif token.__class__ in get_nested_classes(Type, Token):
+        elif token.__class__ in get_nested_classes(CType, Token):
             last_type = token
             continue
             # float x = 3.14159 + 1;
@@ -44,8 +46,39 @@ def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
         elif token.__class__ in get_nested_classes(Arithmetic, Token):
             variable = token_depth[-1].next_tokens.pop()
 
-            if not is_number(variable.lexeme):
-                variables.append(variable.lexeme)
+            if not is_number(variable.lexeme) and isinstance(variable, Misc.Identifier):
+                variable_type = token_list[index - 2]
+
+                if ((variable_type.__class__ not in get_nested_classes(CType, Token)) and
+                        (variable.lexeme not in variables.keys())):
+                    return CError(variable_type, "Expected type keyword, but found no type keyword.")
+
+                variables[variable.lexeme] = variable_type.__class__
+
+            previous_token = token_list[index - 1]
+            next_token: Token = peek(index, token_list)
+
+            previous_token_type = None
+            next_token_type = None
+
+            if isinstance(next_token, Misc.Constant):
+                next_token_type = next_token.constant_type
+
+            elif next_token in variables.keys():
+                next_token_type = variables[next_token.lexeme]
+
+            if isinstance(previous_token, Misc.Constant):
+                previous_token_type = previous_token.constant_type
+
+            elif previous_token in variables.keys():
+                previous_token_type = variables[previous_token.lexeme]
+
+            print(previous_token_type)
+            print(next_token_type)
+
+            if previous_token_type != next_token_type and previous_token_type is not None:
+                return CTypeError(token, previous_token, next_token, "The operands are not the "
+                                                                     "same types.")
 
             token_depth[-1].next_tokens.append(token)
             token.next_tokens.append(token_list[index - 1])
@@ -68,7 +101,8 @@ def parse_tokens(token_list: list[Token]) -> Misc.Program | CError:
             continue
 
         elif isinstance(token, Misc.Identifier):
-            if (token.lexeme not in variables) and (token_list[index - 1].__class__ not in get_nested_classes(Type, Token)):
+            if ((token.lexeme not in variables.keys()) and
+                    (token_list[index - 1].__class__ not in get_nested_classes(CType, Token))):
                 return UndefinedVariable(token, "Make sure you've initialized the variable.")
 
         token_depth[-1].next_tokens.append(token)
