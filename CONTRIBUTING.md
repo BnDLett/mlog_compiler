@@ -1,12 +1,11 @@
 # Contribution Guidelines
 ## Modifying/Contributing As A Whole
-- Separate your code into sections -- this is mostly just to ensure that everything is organized and not all over the
-  place.
+- Make sure your code is clean and organized. Other people are expected to be working on this project, so having clean
+  and understandable code is necessary.
 - Use Python's PEP standards. You can use JetBrain's Pycharm Community Edition IDE to help ensure that you're following
   PEP standards.
-- Specify the return type, when possible. This is more of a non-strict rule as it can be easy to forget to specify a
-  return type; however, whenever you are contributing, try to ensure that the methods/functions that you've contributed
-  specifies a return type.
+- Specify the return type of functions and make use of Python's type hinting. Type hinting makes it easier to identify
+  errors and mistakes in the code.
 - Use type hinting in method/function parameters. Doing so can help ensure that bugs are kept to a minimal.
 - Avoid one-liners, when possible. Things such as `break if (x % 2) == 0 else continue` aren't as readable. If you are
   doing something such as `print(f"Hello, {"world" if [condition] else "friend"}")`, then I understand -- I'm fine with 
@@ -45,15 +44,5 @@ class Foo:
 ```
 
 ## Paradigms
-Use OOP based programming when possible. That's my preferred method of handling this. However, if you wish to use
-functional for something (such as the compiler CLI), then go for it. Try to avoid using non-OOP paradigms in 
-`Compiler.py` and `BaseCompiler.py`, if possible. The goal of having them as OOP is that their functionality can easily 
-be extended with only a decorator and function. Furthermore, it allows people to add layers on top of it. If someone 
-wanted to add their own functionality (without losing the functionality of `Compiler.py`), then they can do that via
-inheritance.
-
-Generally speaking, however, any paradigm is fair game. 
-
-Personal note: I'll write out a list of goals for this project after I've submitted it for my school assignment. As such,
-that'll hopefully make it easier for anyone that is wanting to contribute to know what they should aim for in both
-complexity and functionality. 
+Any paradigm is fine, just make sure you're using them appropriately. A codebase that sticks to one paradigm can become
+difficult and/or annoying to maintain. Python is capable of multi-paradigms, so it'd be within interest to leverage it.
