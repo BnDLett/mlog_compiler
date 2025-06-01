@@ -83,17 +83,17 @@ example_source = """printf("Hello, world", 1);
 // printf("// This is not a comment");
 // x;
 
-if (true) {
-    if (true) {
+if (1) {
+    if (1) {
         printf("moai", 3);
     }
 
     printf(\"lorem ipsum\", 6);
-    bool x = false;
+    int x = 0;
     // hello, world!
     
     float y = 3.14159 * 2.;
-    float z = 3 + y * y + 2;
+    float z = 3. + y * y + 2.;
 }
 """
 

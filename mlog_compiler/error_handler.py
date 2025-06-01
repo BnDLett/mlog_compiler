@@ -42,6 +42,9 @@ class CTypeError(CError):
 
 
 def __get_operand_type__(operand: Token) -> str:
-    # print(operand)
-    # print(operand.lexeme)
-    return operand.constant_type.__name__ if isinstance(operand, Misc.Constant) else operand.__class__.__name__
+    if isinstance(operand, Misc.Identifier):
+        return operand.ctype.__name__
+    elif isinstance(operand, Misc.Constant):
+        return operand.constant_type.__name__
+
+    return operand.__name__

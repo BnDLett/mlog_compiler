@@ -1,6 +1,8 @@
 import inspect
-from collections.abc import Iterable, Sized
-from mlog_compiler.tokens import Type, Token, TokenType
+from collections.abc import Iterable
+
+from mlog_compiler.error_handler import CError
+from mlog_compiler.tokens import Type, Token, TokenType, Misc
 
 
 # https://stackoverflow.com/a/42326409
@@ -38,7 +40,7 @@ def is_number(x: str) -> bool:
     return True
 
 
-def get_number_type(x: str) -> Token:
+def get_number_type(x: str) -> type[Token]:
     """
     Evaluates the type of number in a string. Returns Type.Float if it is a float, and Type.Int if it is an integer.
     This will throw a ValueError if the provided argument is not a number.
@@ -62,6 +64,16 @@ def peek(current_index: int, iterable: Iterable) -> str:
         return ''
 
     return iterable[next_index]
+
+
+def get_type(token: Token) -> type[Token] | CError:
+    if isinstance(token, Misc.Constant):
+        return token.constant_type
+
+    elif isinstance(token, Misc.Identifier):
+        return token.ctype
+
+    return CError(token, "Couldn't determine the type of this token.")
 
 
 update_token_dict()

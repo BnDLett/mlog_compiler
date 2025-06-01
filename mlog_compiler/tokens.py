@@ -58,12 +58,12 @@ class Punctuation(TokenType):
         lexeme = ","
 
 
-class Constant(TokenType):
-    class TrueConstant(Token):
-        lexeme = 'true'
-
-    class FalseConstant(Token):
-        lexeme = 'false'
+# class Constant(TokenType):
+#     class TrueConstant(Token):
+#         lexeme = 'true'
+#
+#     class FalseConstant(Token):
+#         lexeme = 'false'
 
 
 class Keyword(TokenType):
@@ -86,8 +86,8 @@ class Type(TokenType):
     class String(Token):
         lexeme = 'string'
 
-    class Boolean(Token):
-        lexeme = "bool"
+    # class Boolean(Token):
+    #     lexeme = "bool"
 
 
 class Arithmetic(TokenType):
@@ -109,15 +109,17 @@ class Arithmetic(TokenType):
 
 class Misc(TokenType):
     class Identifier(Token):
+        ctype: type[Token]
+
         def __init__(self, line: int, column: int, lexeme: str, next_tokens: list[Token] | None = None):
             super().__init__(line, column, next_tokens)
 
             self.lexeme = lexeme
 
     class Constant(Token):
-        constant_type: Token
+        constant_type: type[Token]
 
-        def __init__(self, line: int, column: int, lexeme: str, constant_type: Token,
+        def __init__(self, line: int, column: int, lexeme: str, constant_type: type[Token],
                      next_tokens: list[Token] | None = None):
             super().__init__(line, column, next_tokens)
 
